@@ -42,6 +42,7 @@ class ImageOut(BaseModel):
 class ProductOut(BaseModel):
     id: int
     product_no: str
+    seller_id: int
     title: str
     variety: str
     origin: str

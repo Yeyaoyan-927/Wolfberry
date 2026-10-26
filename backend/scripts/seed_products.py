@@ -1,8 +1,9 @@
-"""创建演示商品并上传真实图片（AI 生成的枸杞商品图）。
+"""创建演示商品并上传真实图片（docs/飞浆gouqi 用户自备素材）。
 
 用法：python scripts/seed_products.py
-说明：商品上的 ai_grade / defect_ratio 等字段是演示用预置评估值，
-     真实环境由图像评估流水线写入，此处仅用于演示「等级差异标记」功能。
+说明：商品上的 ai_grade / defect_ratio 等由图像评估流水线真实计算写入
+     （上传图片后异步触发），本脚本不再预置任何评估值。
+     商品直接置为已上架以便演示；生产路径应为「提交→审核→上架」。
 """
 from __future__ import annotations
 
@@ -18,6 +19,7 @@ from app.core.logging import setup_logging  # noqa: E402
 from app.infra.db import SessionLocal  # noqa: E402
 from app.models.product import STATUS_ON_SHELF  # noqa: E402
 from app.repositories.product import ProductRepo  # noqa: E402
+from app.services import assessment_service  # noqa: E402
 
 # 图片来源：用户自备素材（docs/飞浆gouqi，185 张）；备选 Wikimedia CC 图见 seed_assets/web
 ASSETS_CANDIDATES = [
@@ -40,10 +42,7 @@ PRODUCTS = [
             "min_order_qty": 50,
             "description": "2026 年 7 月采摘，自然晾晒后人工挑选，果形偏长色泽深红，含水率 12.4%，支持寄样。",
         },
-        # 真实图片：Wikimedia Commons（CC BY-SA），来源见 seed_assets/web/SOURCES.json
         "images": ["cgcjyfyj (7).jpg", "cgcjyfyj (37).jpg"],
-        "ai": {"ai_grade": "特级", "ai_confidence": 0.78,
-               "defect_ratio": 0.021, "moldy_ratio": 0.001, "grain_count": 742},
     },
     {
         "seller": "seller2",
@@ -59,9 +58,6 @@ PRODUCTS = [
             "description": "青海柴达木产区，日照充足果肉厚实，适合礼盒与直接食用，含水率 11.8%。",
         },
         "images": ["cgcjyfyj (69).jpg"],
-        # 演示：自述特优，评估甲级（高报 1 级）——用于展示黄色差异标记
-        "ai": {"ai_grade": "甲级", "ai_confidence": 0.66,
-               "defect_ratio": 0.032, "moldy_ratio": 0.002, "grain_count": 528},
     },
 ]
 
@@ -106,16 +102,23 @@ def main() -> None:
             )
             r.raise_for_status()
 
-        # 预置评估值（演示用）
+        # 直接上架（演示）。TestClient 下 BackgroundTasks 不会执行，这里同步补评。
         session = SessionLocal()
         product_row = ProductRepo(session).detail(pid)
-        for key, value in spec["ai"].items():
-            setattr(product_row, key, value)
         product_row.status = STATUS_ON_SHELF
         session.commit()
         session.close()
 
-        print(f"  商品 {product_row.product_no}：{product_row.title[:22]}  自述 {product_row.grade_claim} / AI {product_row.ai_grade}")
+        assessment_service.run_assessment(pid)  # 真实评估，替代旧预置
+
+        session = SessionLocal()
+        product_row = ProductRepo(session).detail(pid)
+        print(
+            f"  商品 {product_row.product_no}：{product_row.title[:22]}"
+            f"  自述 {product_row.grade_claim} / AI {product_row.ai_grade or '灰(不参与)'}"
+            f"  缺陷率 {product_row.defect_ratio}"
+        )
+        session.close()
 
     print("完成")
 

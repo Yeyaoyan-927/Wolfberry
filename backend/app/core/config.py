@@ -78,6 +78,20 @@ class Settings(BaseSettings):
     RAG_MIN_SCORE: float = 0.18
     RAG_MAX_DOC_MB: int = 20
 
+    # ---------- 图像评估 ----------
+    ASSESS_ENABLED: bool = True
+    # auto: 有 ONNX 权重用模型，否则 OpenCV 启发式；可强制 mock / opencv / onnx
+    ASSESS_DETECTOR: str = "auto"
+    ASSESS_ONNX_PATH: str = str(BASE_DIR / "var" / "models" / "goji-seg.onnx")
+    ASSESS_MODEL_VERSION: str = "opencv-heuristic-v0"  # 换 YOLO 时改成 goji-seg-v1 等
+    ASSESS_THRESHOLD_VERSION: str = "th-2026.10-01"
+    ASSESS_MIN_IMAGE_CONF: float = 0.20   # 图级置信低于此值剔除
+    ASSESS_GRAY_CONF: float = 0.45        # 低于此值 AI 不参与等级判定
+    ASSESS_MIN_GRAINS: int = 20           # 样品总粒数代表性下限
+
+    # ---------- 订单 ----------
+    ORDER_CONFIRM_TIMEOUT_MIN: int = 1440  # 卖家确认超时（小时级演示用分钟配置）
+
     @property
     def is_prod(self) -> bool:
         return self.APP_ENV.lower() in {"prod", "production"}

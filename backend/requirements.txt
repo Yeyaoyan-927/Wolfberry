@@ -27,3 +27,6 @@ httpx==0.28.1
 
 # Test
 pytest==8.3.4
+
+# Vision (伪评估 → 未来 YOLO ONNX)
+opencv-python-headless==5.0.0.70

@@ -1,16 +1,17 @@
 """商品接口：创建、图片上传、列表、详情。"""
 from __future__ import annotations
 
-from fastapi import APIRouter, File, Query, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, Query, Request, UploadFile
 from fastapi.encoders import jsonable_encoder
 
 from app.api.deps import DbSession, SellerUser
+from app.core.config import settings
 from app.core.errors import BizError, Err
 from app.core.logging import new_trace_id
 from app.repositories.product import ProductRepo
 from app.schemas.common import ok
 from app.schemas.product import ImageOut, ProductCreateIn
-from app.services import product_service
+from app.services import assessment_service, product_service
 
 router = APIRouter(tags=["products"])
 
@@ -29,9 +30,13 @@ async def upload_product_image(
     seller: SellerUser,
     session: DbSession,
     request: Request,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
 ):
-    """上传商品实拍图，执行 L1 前置校验（格式 / 大小 / 分辨率）。"""
+    """上传商品实拍图，执行 L1 前置校验（格式 / 大小 / 分辨率）。
+
+    上传成功后异步触发图像评估（失败不阻塞，字段留空显示"评估中"）。
+    """
     trace = new_trace_id()
     data = await file.read()
     if not data:
@@ -51,6 +56,11 @@ async def upload_product_image(
         content_type=file.content_type or "image/jpeg",
         base_url=str(request.base_url).rstrip("/"),
     )
+
+    if settings.ASSESS_ENABLED:
+        # 评估在独立 session 中执行，不影响当前请求事务
+        background_tasks.add_task(assessment_service.run_assessment, product_id)
+
     return ok(jsonable_encoder(ImageOut.model_validate(image)), trace_id=trace)
 
 
