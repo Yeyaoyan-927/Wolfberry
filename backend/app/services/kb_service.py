@@ -86,30 +86,49 @@ def ingest(session: Session, doc: KbDocument, text: str) -> dict:
         raise BizError(Err.RAG_DEGRADED, "向量化结果数量与切片不匹配")
 
     repo.clear_chunks(doc.id)
-    repo.bulk_add_chunks(
+    chunk_rows = [
+        KbChunk(
+            doc_id=doc.id,
+            chunk_no=chunk.index,
+            section_path=chunk.section_path[:255],
+            content=chunk.text,
+            char_count=len(chunk.text),
+            embedding=_dumps(vectors[i]),
+            embedding_provider=provider,
+            embedding_dim=len(vectors[i]),
+            meta={"strategy": strategy},
+        )
+        for i, chunk in enumerate(chunks)
+    ]
+    repo.bulk_add_chunks(chunk_rows)
+    repo.mark_indexed(doc, chunk_count=len(chunks), char_count=len(text))
+    session.flush()  # 拿到 chunk 主键，供 Chroma 以 chunk_id 作为唯一 ID
+
+    # Chroma 主检索库（失败不阻塞入库，MySQL 向量列始终是降级数据源）
+    from app.rag import vector_store
+
+    vector_store.upsert(
         [
-            KbChunk(
-                doc_id=doc.id,
-                chunk_no=chunk.index,
-                section_path=chunk.section_path[:255],
-                content=chunk.text,
-                char_count=len(chunk.text),
-                embedding=_dumps(vectors[i]),
-                embedding_provider=provider,
-                embedding_dim=len(vectors[i]),
-                meta={"strategy": strategy},
-            )
-            for i, chunk in enumerate(chunks)
+            {
+                "chunk_id": row.id,
+                "doc_id": doc.id,
+                "doc_type": doc.doc_type,
+                "doc_title": doc.title,
+                "section_path": row.section_path,
+                "content": row.content,
+                "embedding": vectors[i],
+            }
+            for i, row in enumerate(chunk_rows)
         ]
     )
-    repo.mark_indexed(doc, chunk_count=len(chunks), char_count=len(text))
 
     logger.info(
-        "文档入库完成 doc=%s strategy=%s chunks=%d provider=%s",
+        "文档入库完成 doc=%s strategy=%s chunks=%d provider=%s chroma=%s",
         doc.doc_no,
         strategy,
         len(chunks),
         provider,
+        vector_store.available(),
     )
     return {"strategy": strategy, "chunks": len(chunks), "provider": provider}
 

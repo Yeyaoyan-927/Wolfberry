@@ -30,3 +30,11 @@ pytest==8.3.4
 
 # Vision (伪评估 → 未来 YOLO ONNX)
 opencv-python-headless==5.0.0.70
+
+# Agent 编排
+langgraph==1.2.17
+langchain-core==1.7.0
+langchain-openai==1.7.2
+
+# 向量库
+chromadb==1.5.9

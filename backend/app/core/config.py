@@ -77,6 +77,12 @@ class Settings(BaseSettings):
     RAG_CHUNK_OVERLAP: int = 80
     RAG_MIN_SCORE: float = 0.18
     RAG_MAX_DOC_MB: int = 20
+    CHROMA_DIR: str = str(BASE_DIR / "var" / "chroma")
+
+    # ---------- 智能体 ----------
+    AGENT_ENABLED: bool = True
+    AGENT_INTENT_MODEL: str = "qwen-flash"   # 意图分类用轻量模型
+    AGENT_ANSWER_MODEL: str = "qwen-plus"    # 汇总生成
 
     # ---------- 图像评估 ----------
     ASSESS_ENABLED: bool = True

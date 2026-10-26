@@ -6,7 +6,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, File, Form, Query, Request, UploadFile
 from fastapi.encoders import jsonable_encoder
-from app.api.deps import DbSession
+from app.api.deps import DbSession, OptionalUser
 from app.core.errors import BizError, Err
 from app.core.logging import new_trace_id
 from app.schemas.common import ok
@@ -124,14 +124,26 @@ def kb_search(payload: SearchIn, session: DbSession):
 
 
 @router.post("/kb/ask")
-def kb_ask(payload: AskIn, session: DbSession):
+def kb_ask(payload: AskIn, session: DbSession, user: OptionalUser):
+    """智能问答：LangGraph Agent 编排（意图→工具→生成）优先，失败自动降级 RAG 管线。"""
     trace = new_trace_id()
+
+    if payload.with_llm:
+        from app.agent import run_agent
+
+        agent = run_agent(session, payload.question,
+                          role=user.role if user else "buyer")
+        if agent is not None:
+            agent["mode"] = "agent"
+            return ok(jsonable_encoder(agent), trace_id=trace)
+
     result = rag_service.ask(
         session,
         payload.question,
         top_k=payload.top_k,
         with_llm=payload.with_llm,
     )
+    result["mode"] = "pipeline"
     return ok(jsonable_encoder(result), trace_id=trace)
 
 
