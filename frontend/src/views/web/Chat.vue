@@ -1,0 +1,121 @@
+<template>
+  <div class="page chat-page">
+    <div class="chat card">
+      <div class="side">
+        <div class="s-head">问 AI</div>
+        <div class="s-sub">标准 / 行情 / 选品 · 答案附引用来源</div>
+        <div v-for="s in samples" :key="s" class="sample" @click="ask(s)">{{ s }}</div>
+      </div>
+
+      <div class="main">
+        <div class="msgs" ref="msgsEl">
+          <div v-for="(m, i) in msgs" :key="i" class="msg" :class="m.role">
+            <div class="bubble">
+              <div v-if="m.role === 'ai'" class="answer" v-html="m.html"></div>
+              <template v-else>{{ m.text }}</template>
+            </div>
+            <div v-if="m.citations?.length" class="cites">
+              <span class="cite" v-for="(c, j) in m.citations" :key="j"
+                    :title="c.text?.slice(0, 120)">[{{ c.no }}] {{ c.title || c.doc_title || '知识条目' }}</span>
+            </div>
+          </div>
+          <div v-if="pending" class="msg ai"><div class="bubble typing">AI 正在检索知识与数据<span class="dots"></span></div></div>
+        </div>
+        <div class="input">
+          <el-input v-model="text" size="large" placeholder="例如：特优和特级差在哪？中宁枸杞现在什么价？"
+                    @keyup.enter="send" :disabled="pending" />
+          <el-button type="primary" size="large" :loading="pending" @click="send">发送</el-button>
+        </div>
+        <div class="foot-note">AI 回答仅供参考，不构成交易依据；等级判定与价格以平台规则与人工审核为准</div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { nextTick, ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import { kbAsk } from '../../api'
+
+const samples = [
+  '特优和特级差在哪？',
+  '霉变率超多少不能上架？',
+  '现在中宁宁杞5号什么价？',
+  '280粒和220粒怎么选？',
+]
+const msgs = ref([
+  { role: 'ai', html: '你好！我是杞市智能问答，可以查<b>分级标准</b>、<b>行情价格</b>、<b>选品建议</b>。回答会附引用来源。' },
+])
+const text = ref('')
+const pending = ref(false)
+const msgsEl = ref(null)
+
+function esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function render(md) {
+  // 极简 markdown：换行 + [n] 引用标红
+  return esc(md)
+    .replace(/\[(\d+)\]/g, '<sup class="cite-mark">[$1]</sup>')
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/\n/g, '<br>')
+}
+
+async function scrollBottom() {
+  await nextTick()
+  msgsEl.value?.scrollTo({ top: msgsEl.value.scrollHeight, behavior: 'smooth' })
+}
+
+async function ask(q) {
+  if (pending.value) return
+  text.value = q
+  await send()
+}
+
+async function send() {
+  const q = text.value.trim()
+  if (!q || pending.value) return
+  text.value = ''
+  msgs.value.push({ role: 'user', text: q })
+  pending.value = true
+  scrollBottom()
+  try {
+    const data = await kbAsk(q)
+    msgs.value.push({ role: 'ai', html: render(data.answer || '（无回答）'), citations: data.citations || [] })
+  } catch {
+    msgs.value.push({ role: 'ai', html: '抱歉，问答服务暂时不可用，请稍后重试。' })
+  } finally {
+    pending.value = false
+    scrollBottom()
+  }
+}
+</script>
+
+<style scoped>
+.chat-page { display: flex; justify-content: center; }
+.chat { width: min(1180px, 100%); height: min(680px, calc(100vh - 150px)); margin: 20px auto;
+  display: grid; grid-template-columns: 250px minmax(0, 1fr); overflow: hidden; }
+.side { border-right: 1px solid var(--line); padding: 18px 16px; background: linear-gradient(180deg, #fff, var(--brand-soft)); }
+.s-head { font-weight: 800; font-size: 16px; }
+.s-sub { font-size: 11.5px; color: var(--ink-3); margin: 6px 0 16px; }
+.sample { font-size: 12.5px; background: #fff; border: 1px solid var(--brand-line); color: var(--ink-2);
+  border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; cursor: pointer; transition: all .15s; }
+.sample:hover { border-color: var(--brand); color: var(--brand); }
+.main { display: flex; flex-direction: column; min-height: 0; background: var(--bg); }
+.msgs { flex: 1; overflow-y: auto; padding: 18px 22px; }
+.msg { display: flex; flex-direction: column; margin-bottom: 14px; }
+.msg.user { align-items: flex-end; }
+.bubble { max-width: 78%; background: #fff; border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 14px; font-size: 13.5px; line-height: 1.75; }
+.msg.user .bubble { background: var(--brand); color: #fff; border-color: var(--brand); }
+.answer :deep(.cite-mark) { color: var(--brand); font-weight: 700; }
+.cites { max-width: 78%; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.cite { font-size: 11px; color: var(--ink-3); background: #fff; border: 1px solid var(--line);
+  border-radius: 4px; padding: 2px 6px; cursor: default; }
+.typing::after { content: ""; }
+.dots::after { content: "…"; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: .2; } }
+.input { display: flex; gap: 10px; padding: 12px 18px; background: #fff; border-top: 1px solid var(--line); }
+.foot-note { text-align: center; font-size: 11px; color: var(--ink-4); padding: 6px 0 10px; background: #fff; }
+</style>

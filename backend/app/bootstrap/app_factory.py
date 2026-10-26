@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core import logging as app_logging
@@ -105,6 +106,16 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
         docs_url="/docs" if not settings.is_prod else None,
     )
+
+    # 开发环境放开跨域（Vite dev server 5173 等）；生产应由网关/同域收敛
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"] if not settings.is_prod else [],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     _register_middleware(app)
     _register_exception_handlers(app)
     _register_routers(app)

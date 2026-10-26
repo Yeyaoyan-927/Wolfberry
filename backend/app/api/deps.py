@@ -51,3 +51,23 @@ def require_role(*roles: str):
 SellerUser = Annotated[SysUser, Depends(require_role("seller", "admin"))]
 AdminUser = Annotated[SysUser, Depends(require_role("admin"))]
 AnyUser = Annotated[SysUser, Depends(get_current_user)]
+
+
+def get_optional_user(
+    session: DbSession,
+    authorization: Annotated[str | None, Header()] = None,
+) -> SysUser | None:
+    """可选鉴权：有 token 且有效返回用户，否则 None（公开接口用）。"""
+    if not authorization or not authorization.lower().startswith("bearer "):
+        return None
+    try:
+        payload = decode_token(authorization.split(" ", 1)[1].strip())
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+        return UserRepo(session).active_by_id(int(user_id))
+    except Exception:
+        return None
+
+
+OptionalUser = Annotated[SysUser | None, Depends(get_optional_user)]

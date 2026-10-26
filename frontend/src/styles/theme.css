@@ -1,0 +1,52 @@
+/* 枸杞红主题令牌（与 prototype/assets/app.css 对齐） */
+:root {
+  --brand: #c22f27;
+  --brand-dark: #9c221c;
+  --brand-soft: #fdeee9;
+  --brand-line: #f3d3cb;
+
+  --ink-1: #26180f;
+  --ink-2: #5d4a3a;
+  --ink-3: #8a7462;
+  --ink-4: #b3a396;
+
+  --bg: #faf7f5;
+  --line: #ede4dc;
+  --card: #ffffff;
+
+  /* Element Plus 主色覆盖 */
+  --el-color-primary: #c22f27;
+  --el-color-primary-dark-2: #9c221c;
+  --el-color-primary-light-3: #d2523c;
+  --el-color-primary-light-5: #e8a49a;
+  --el-color-primary-light-7: #f3cfc7;
+  --el-color-primary-light-8: #f7e0da;
+  --el-color-primary-light-9: #fdeee9;
+
+  --el-border-radius-base: 6px;
+  --el-font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+}
+
+/* 等级徽标（特优金/特级红/甲级蓝/乙级灰/等外深灰） */
+.grade-tag { font-weight: 600; }
+.grade-特优 { color: #a06a00; background: #fdf3dd; border-color: #efd9a7; }
+.grade-特级 { color: #c22f27; background: #fdeee9; border-color: #f3d3cb; }
+.grade-甲级 { color: #1f5fa8; background: #e8f1fb; border-color: #c4dcf4; }
+.grade-乙级 { color: #6b6b6b; background: #f1f1f1; border-color: #ddd; }
+.grade-等外 { color: #fff; background: #7a6a5c; border-color: #7a6a5c; }
+
+/* 差异标记（绿=一致 黄=高报1级 红=高报2级+ 蓝=低报 灰=AI不参与） */
+.diff-绿 { color: #1d8a4e; background: #e5f6ec; border-color: #bce5cc; }
+.diff-黄 { color: #b07205; background: #fdf3dd; border-color: #efd9a7; }
+.diff-红 { color: #fff; background: #d03a2f; border-color: #d03a2f; }
+.diff-蓝 { color: #1f5fa8; background: #e8f1fb; border-color: #c4dcf4; }
+.diff-灰 { color: #8a7462; background: #f1ece7; border-color: #ddd3c9; }
+
+/* 数字等宽 */
+.num { font-variant-numeric: tabular-nums; }
+
+/* 页面通用 */
+.page { max-width: 1200px; margin: 0 auto; padding: 20px 16px 48px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+.text-brand { color: var(--brand); }
+.text-dim { color: var(--ink-3); }

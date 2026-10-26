@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, BackgroundTasks, File, Query, Request, UploadFile
 from fastapi.encoders import jsonable_encoder
 
-from app.api.deps import DbSession, SellerUser
+from app.api.deps import DbSession, OptionalUser, SellerUser
 from app.core.config import settings
 from app.core.errors import BizError, Err
 from app.core.logging import new_trace_id
@@ -67,6 +67,7 @@ async def upload_product_image(
 @router.get("/products")
 def list_products(
     session: DbSession,
+    user: OptionalUser,
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
     keyword: str | None = None,
@@ -76,8 +77,11 @@ def list_products(
     min_price: float | None = None,
     max_price: float | None = None,
     order_by: str = Query("newest", pattern="^(newest|price_asc|price_desc|defect_asc)$"),
+    only_on_shelf: bool = Query(True, description="false 仅管理员可用"),
 ):
     trace = new_trace_id()
+    # 数据权限：只有管理员可以查看非上架商品
+    show_all = only_on_shelf is False and user is not None and user.role == "admin"
     items, total = product_service.list_products(
         session,
         page=page,
@@ -88,6 +92,7 @@ def list_products(
         origin=origin,
         min_price=min_price,
         max_price=max_price,
+        only_on_shelf=not show_all,
         order_by=order_by,
     )
     return ok(
