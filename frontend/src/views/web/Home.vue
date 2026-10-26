@@ -21,7 +21,7 @@
       <el-row :gutter="16">
         <el-col v-for="p in latest" :key="p.id" :span="6" :xs="12">
           <div class="pcard" @click="$router.push(`/products/${p.id}`)">
-            <div class="pimg" :style="p.cover_url ? `{background-image:url('${p.cover_url}')}` : ''"></div>
+            <div class="pimg" :style="p.cover_url ? { backgroundImage: `url(${p.cover_url})` } : {}"></div>
             <div class="pbody">
               <div class="ptitle">{{ p.title }}</div>
               <div class="pgrades">

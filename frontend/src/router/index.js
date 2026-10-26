@@ -35,7 +35,14 @@ const router = createRouter({ history: createWebHistory(), routes })
 
 router.beforeEach((to) => {
   const auth = useAuthStore()
-  if (to.meta.auth && !auth.isLogin) return { name: 'login', query: { redirect: to.fullPath } }
+  // 全局守卫：未登录只能访问登录页（应用入口即登录页）
+  if (to.name !== 'login' && !auth.isLogin) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  // 已登录访问登录页 → 直接进系统
+  if (to.name === 'login' && auth.isLogin) {
+    return auth.role === 'admin' ? '/admin/audit' : '/'
+  }
   if (to.meta.admin && auth.role !== 'admin') return { name: 'home' }
   if (to.meta.seller && !['seller', 'admin'].includes(auth.role)) return { name: 'home' }
   return true

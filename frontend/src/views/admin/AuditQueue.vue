@@ -10,7 +10,7 @@
 
     <div class="card list" v-loading="loading">
       <div v-for="it in items" :key="it.id" class="qrow" @click="$router.push(`/admin/audit/${it.id}`)">
-        <div class="qimg" :style="it.cover ? `background-image:url('${it.cover}')` : ''"></div>
+        <div class="qimg" :style="it.cover_url ? { backgroundImage: `url(${it.cover_url})` } : {}"></div>
         <div class="q-main">
           <div class="q-title">{{ it.title }}</div>
           <div class="q-meta dim num">
