@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我的订单 · 杞市</title>
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+  .order-card { background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg); margin-bottom: 14px; overflow: hidden; }
+  .order-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; background: var(--bg-2); border-bottom: 1px solid var(--line-2);
+    font-size: 12.5px; color: var(--ink-3);
+  }
+  .order-hd .no { font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--ink-2); letter-spacing: -.01em; }
+  .order-bd { display: grid; grid-template-columns: 88px minmax(0,1fr) 180px; gap: 18px; padding: 18px; align-items: center; }
+  .order-img {
+    aspect-ratio: 1; border-radius: var(--r); border: 1px solid var(--line);
+    background: linear-gradient(150deg, #f7efea, #ece0d8);
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .order-img::after {
+    content: ""; width: 46%; height: 46%; border-radius: 999px;
+    background: radial-gradient(circle at 35% 30%, #E8684F, #C22F27 55%, #8E1D18);
+    box-shadow: 10px 4px 0 -3px #D2523C, -9px 6px 0 -4px #A8261E;
+  }
+  .order-title { font-size: 14px; font-weight: 500; line-height: 1.45; }
+  .order-title:hover { color: var(--brand); }
+  .order-meta { display: flex; gap: 16px; margin-top: 8px; font-size: 12px; color: var(--ink-3); flex-wrap: wrap; }
+  .order-side { border-left: 1px solid var(--line-2); padding-left: 18px; text-align: right; }
+
+  .order-ft {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; border-top: 1px solid var(--line-2);
+    background: #fff;
+  }
+  .timeline { display: flex; align-items: center; gap: 0; font-size: 12px; color: var(--ink-3); }
+  .tl-node { display: flex; align-items: center; gap: 6px; }
+  .tl-dot { width: 7px; height: 7px; border-radius: 999px; background: var(--line); }
+  .tl-dot.done { background: var(--ok); }
+  .tl-dot.cur { background: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+  .tl-line { width: 32px; height: 1px; background: var(--line); margin: 0 8px; }
+  .tl-line.done { background: var(--ok-line); }
+
+  .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
+  .status-dot { width: 6px; height: 6px; border-radius: 999px; }
+
+  .empty-state { padding: 80px 0; }
+
+  @media (max-width: 900px) {
+    .order-bd { grid-template-columns: 72px minmax(0,1fr); }
+    .order-side { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line-2); padding: 12px 0 0; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="logo" href="home.html"><span class="logo-mark">杞</span>杞市</a>
+    <nav class="nav">
+      <a href="home.html">首页</a>
+      <a href="products.html">货源</a>
+      <a href="products.html">行情</a>
+      <a href="chat.html">智能问答</a>
+    </nav>
+    <div class="topsearch">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#aab1ba" stroke-width="1.4"/><path d="M10.6 10.6L14 14" stroke="#aab1ba" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <input placeholder="搜品种、产区、规格">
+    </div>
+    <div class="topbar-actions">
+      <a class="btn btn-ghost btn-sm" href="orders.html">我的订单</a>
+      <a class="btn btn-primary btn-sm" href="seller-publish.html">发布货源</a>
+      <div class="avatar">中</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap page" style="max-width:1080px">
+
+  <div class="between" style="margin-bottom:6px">
+    <h1 style="font-size:22px;font-weight:650;letter-spacing:-0.025em">我的订单</h1>
+    <div class="segmented" data-toggle-group="role">
+      <button class="active" data-toggle="buyer">我买的</button>
+      <button data-toggle="seller">我卖的</button>
+    </div>
+  </div>
+
+  <div class="tabs" style="margin-top:18px;margin-bottom:20px" data-toggle-group="st">
+    <button class="active" data-toggle="all">全部 6</button>
+    <button data-toggle="p1">待卖家确认 1</button>
+    <button data-toggle="p2">待发货 2</button>
+    <button data-toggle="p3">已发货 1</button>
+    <button data-toggle="p4">已完成 2</button>
+    <button data-toggle="p5">售后中 0</button>
+  </div>
+
+  <!-- ======= 待卖家确认 ======= -->
+  <div class="order-card">
+    <div class="order-hd">
+      <div class="row gap-16">
+        <span>2026-10-26 15:42</span>
+        <span class="no">SO20261026000123</span>
+        <span>卖家：中宁杞源合作社</span>
+      </div>
+      <span class="status-badge" style="color:var(--warn)">
+        <span class="status-dot" style="background:var(--warn)"></span>待卖家确认
+      </span>
+    </div>
+
+    <div class="order-bd">
+      <div class="order-img"></div>
+      <div>
+        <a class="order-title" href="product-detail.html">中宁宁杞5号 特级 280粒/50g 2026 新货 产地直发</a>
+        <div class="order-meta">
+          <span>规格 280 粒/50g</span>
+          <span>¥46.20 × 500 kg</span>
+          <span>运费 卖家承担</span>
+        </div>
+        <div class="notice notice-warn" style="margin-top:12px;padding:9px 12px;font-size:12.5px">
+          卖家需在 24 小时内确认，超时订单将自动取消并释放库存。
+        </div>
+      </div>
+      <div class="order-side">
+        <div class="xs muted">订单金额</div>
+        <div class="num" style="font-size:19px;font-weight:700;margin-top:2px">¥23,100.00</div>
+        <div class="xs muted" style="margin-top:6px">含运费 ¥0.00</div>
+      </div>
+    </div>
+
+    <div class="order-ft">
+      <div class="timeline">
+        <div class="tl-node"><span class="tl-dot cur"></span>已下单</div>
+        <span class="tl-line"></span>
+        <div class="tl-node"><span class="tl-dot"></span>卖家确认</div>
+        <span class="tl-line"></span>
+        <div class="tl-node"><span class="tl-dot"></span>发货</div>
+        <span class="tl-line"></span>
+        <div class="tl-node"><span class="tl-dot"></span>收货</div>
+      </div>
+      <div class="row gap-8">
+        <button class="btn btn-sm">取消订单</button>
+        <button class="btn btn-sm">联系卖家</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= 待发货 ======= -->
+  <div class="order-card">
+    <div class="order-hd">
+      <div class="row gap-16">
+        <span>2026-10-24 10:18</span>
+        <span class="no">SO20261024000098</span>
+        <span>卖家：中宁红宝枸杞</span>
+      </div>
+      <span class="status-badge" style="color:var(--info)">
+        <span class="status-dot" style="background:var(--info)"></span>待发货
+      </span>
+    </div>
+
+    <div class="order-bd">
+      <div class="order-img"></div>
+      <div>
+        <a class="order-title" href="product-detail.html">中宁大麻叶优系 特级 280粒 颗粒均匀 色深</a>
+        <div class="order-meta">
+          <span>规格 280 粒/50g</span>
+          <span>¥58.00 × 200 kg</span>
+          <span>承诺 48 小时内发货</span>
+        </div>
+        <div class="notice notice-plain" style="margin-top:12px;padding:9px 12px;font-size:12.5px">
+          卖家已确认订单，正在备货。支付方式：对公转账（已线下完成）。
+        </div>
+      </div>
+      <div class="order-side">
+        <div class="xs muted">订单金额</div>
+        <div class="num" style="font-size:19px;font-weight:700;margin-top:2px">¥11,600.00</div>
+        <div class="xs muted" style="margin-top:6px">已登记付款</div>
+      </div>
+    </div>
+
+    <div class="order-ft">
+      <div class="timeline">
+        <div class="tl-node"><span class="tl-dot done"></span>已下单</div>
+        <span class="tl-line done"></span>
+        <div class="tl-node"><span class="tl-dot done"></span>卖家确认</div>
+        <span class="tl-line"></span>
+        <div class="tl-node"><span class="tl-dot cur"></span>发货</div>
+        <span class="tl-line"></span>
+        <div class="tl-node"><span class="tl-dot"></span>收货</div>
+      </div>
+      <div class="row gap-8">
+        <button class="btn btn-sm">联系卖家</button>
+        <button class="btn btn-sm">查看凭证</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= 已发货 ======= -->
+  <div class="order-card">
+    <div class="order-hd">
+      <div class="row gap-16">
+        <span>2026-10-20 09:02</span>
+        <span class="no">SO20261020000061</span>
+        <span>卖家：宁夏中宁枸杞集团</span>
+      </div>
+      <span class="status-badge" style="color:var(--brand)">
+        <span class="status-dot" style="background:var(--brand)"></span>已发货
+      </span>
+    </div>
+
+    <div class="order-bd">
+      <div class="order-img"></div>
+      <div>
+        <a class="order-title" href="product-detail.html">中宁宁杞5号 特级 280粒 大货可长期供</a>
+        <div class="order-meta">
+          <span>规格 280 粒/50g</span>
+          <span>¥44.80 × 1,000 kg</span>
+          <span>德邦物流 · DB7281936452</span>
+        </div>
+        <div class="notice notice-info" style="margin-top:12px;padding:9px 12px;font-size:12.5px">
+          已于 2026-10-21 发出，预计 10-27 到达杭州。收货前请开箱验货，如有异常当场拍照。
+        </div>
+      </div>
+      <div class="order-side">
+        <div class="xs muted">订单金额</div>
+        <div class="num" style="font-size:19px;font-weight:700;margin-top:2px">¥44,800.00</div>
+        <div class="xs muted" style="margin-top:6px">已付清</div>
+      </div>
+    </div>
+
+    <div class="order-ft">
+      <div class="timeline">
+        <div class="tl-node"><span class="tl-dot done"></span>已下单</div>
+        <span class="tl-line done"></span>
+        <div class="tl-node"><span class="tl-dot done"></span>卖家确认</div>
+        <span class="tl-line done"></span>
+        <div class="tl-node"><span class="tl-dot done"></span>发货</div>
+        <span class="tl-line"></span>
+        <div class="tl-node"><span class="tl-dot cur"></span>收货</div>
+      </div>
+      <div class="row gap-8">
+        <button class="btn btn-sm">查看物流</button>
+        <button class="btn btn-sm btn-primary">确认收货</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= 已完成 ======= -->
+  <div class="order-card">
+    <div class="order-hd">
+      <div class="row gap-16">
+        <span>2026-10-08 14:26</span>
+        <span class="no">SO20261008000027</span>
+        <span>卖家：中宁杞源合作社</span>
+      </div>
+      <span class="status-badge" style="color:var(--ok)">
+        <span class="status-dot" style="background:var(--ok)"></span>已完成
+      </span>
+    </div>
+
+    <div class="order-bd">
+      <div class="order-img"></div>
+      <div>
+        <a class="order-title" href="product-detail.html">中宁宁杞5号 特级 280粒/50g 2026 新货</a>
+        <div class="order-meta">
+          <span>规格 280 粒/50g</span>
+          <span>¥46.20 × 500 kg</span>
+          <span>已完成 · 2026-10-14</span>
+        </div>
+        <div class="row gap-8" style="margin-top:12px">
+          <span class="tag tag-ok">描述一致</span>
+          <span class="tag tag-outline">已评价</span>
+        </div>
+      </div>
+      <div class="order-side">
+        <div class="xs muted">订单金额</div>
+        <div class="num" style="font-size:19px;font-weight:700;margin-top:2px">¥23,100.00</div>
+        <div class="xs muted" style="margin-top:6px">售后期限还剩 9 天</div>
+      </div>
+    </div>
+
+    <div class="order-ft">
+      <div class="small muted">评价：货和图上一致，坏果不多，第二次采购了。</div>
+      <div class="row gap-8">
+        <button class="btn btn-sm">再买一次</button>
+        <button class="btn btn-sm">申请售后</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 空状态示例 -->
+  <div class="empty-state" hidden>
+    <div class="empty">
+      <div class="empty-mark">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 7h14l-1.2 10.2a1.5 1.5 0 01-1.5 1.3H6.7a1.5 1.5 0 01-1.5-1.3L4 7z" stroke="#aab1ba" stroke-width="1.4"/><path d="M8 7V5.5a3 3 0 016 0V7" stroke="#aab1ba" stroke-width="1.4"/></svg>
+      </div>
+      <div class="empty-title">这里还没有订单</div>
+      <div class="small">去<a href="products.html" style="color:var(--brand-dark)">货源市场</a>看看，或让 AI 帮你按预算挑一批</div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

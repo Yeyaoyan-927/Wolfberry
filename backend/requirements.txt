@@ -1,0 +1,29 @@
+# Web
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# Data
+SQLAlchemy==2.0.36
+PyMySQL==1.1.1
+alembic==1.14.0
+
+# Config & security
+pydantic==2.10.4
+pydantic-settings==2.7.0
+PyJWT==2.10.1
+bcrypt==4.2.1
+
+# Object storage (Tencent COS)
+cos-python-sdk-v5==1.9.35
+
+# RAG / document parsing
+pypdf==5.1.0
+python-docx==1.1.2
+numpy==2.2.1
+
+# HTTP client (LLM / embedding)
+httpx==0.28.1
+
+# Test
+pytest==8.3.4

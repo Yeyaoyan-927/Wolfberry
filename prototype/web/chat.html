@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>智能问答 · 杞市</title>
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+  .sess-item { display: block; padding: 11px 14px; border-radius: var(--r-sm); margin-bottom: 2px; }
+  .sess-item:hover { background: var(--bg); }
+  .sess-item.active { background: var(--bg); }
+  .sess-t { font-size: 13px; color: var(--ink); line-height: 1.45; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sess-m { font-size: 11px; color: var(--ink-4); margin-top: 3px; }
+  .sess-group { font-size: 11px; color: var(--ink-4); padding: 14px 14px 6px; letter-spacing: .04em; }
+
+  .chat-scroll { flex: 1; overflow-y: auto; padding: 20px 22px; scrollbar-gutter: stable; }
+  .chat-inner { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+  .ai-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .ai-mark {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--ink); color: #fff;
+    display: grid; place-items: center; font-size: 11px; font-weight: 600;
+  }
+
+  .answer-card {
+    background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg);
+    padding: 14px 16px; font-size: 14px; line-height: 1.75;
+  }
+  .answer-card p + p { margin-top: 10px; }
+  .answer-card b { font-weight: 600; }
+
+  .chart-card {
+    border: 1px solid var(--line); border-radius: var(--r);
+    overflow: hidden; margin-top: 14px;
+  }
+  .chart-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; background: var(--bg-2); border-bottom: 1px solid var(--line-2);
+    font-size: 12px;
+  }
+  .chart-bd { padding: 8px 6px 2px; }
+
+  .data-note {
+    padding: 9px 14px; border-top: 1px solid var(--line-2);
+    font-size: 11.5px; color: var(--ink-3); background: #fff;
+  }
+
+  .src-list { margin-top: 12px; border-top: 1px solid var(--line-2); padding-top: 10px; }
+  .src-item { display: flex; gap: 8px; padding: 5px 0; font-size: 12px; color: var(--ink-2); align-items: flex-start; }
+  .src-no {
+    flex-shrink: 0; width: 15px; height: 15px; border-radius: 3px;
+    background: var(--brand-soft); border: 1px solid var(--brand-line); color: var(--brand-dark);
+    font-size: 10px; display: grid; place-items: center; font-weight: 600; margin-top: 2px;
+  }
+
+  .ref-block { padding: 18px; }
+  .ref-doc { font-size: 13px; font-weight: 600; line-height: 1.5; }
+  .ref-meta { font-size: 11.5px; color: var(--ink-3); margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .quote-text {
+    margin-top: 12px; padding: 14px;
+    background: var(--bg-2); border-left: 2px solid var(--brand);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    font-size: 13px; line-height: 1.85; color: var(--ink-2);
+  }
+  .quote-text mark { background: #fdf0d5; padding: 0 2px; color: var(--ink); }
+
+  .typing { display: inline-flex; gap: 3px; align-items: center; height: 16px; }
+  .typing i { width: 4px; height: 4px; border-radius: 999px; background: var(--ink-4); animation: blink 1.2s infinite; }
+  .typing i:nth-child(2) { animation-delay: .2s; }
+  .typing i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%,60%,100% { opacity: .25 } 30% { opacity: 1 } }
+
+  @media (max-width: 1180px) { .chat-ref { display: none; } }
+</style>
+</head>
+<body class="chat-page">
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="logo" href="home.html"><span class="logo-mark">杞</span>杞市</a>
+    <nav class="nav">
+      <a href="home.html">首页</a>
+      <a href="products.html">货源</a>
+      <a href="products.html">行情</a>
+      <a class="active" href="chat.html">智能问答</a>
+    </nav>
+    <div class="topsearch">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#aab1ba" stroke-width="1.4"/><path d="M10.6 10.6L14 14" stroke="#aab1ba" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <input placeholder="搜品种、产区、规格">
+    </div>
+    <div class="topbar-actions">
+      <a class="btn btn-ghost btn-sm" href="orders.html">我的订单</a>
+      <a class="btn btn-primary btn-sm" href="seller-publish.html">发布货源</a>
+      <div class="avatar">中</div>
+    </div>
+  </div>
+</header>
+
+<div class="chat-shell">
+
+  <!-- ============ 会话列表 ============ -->
+  <aside class="chat-side">
+    <div style="padding:14px">
+      <button class="btn btn-primary btn-block btn-sm" style="height:34px">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+        新建对话
+      </button>
+    </div>
+
+    <div class="sess-group">今天</div>
+    <div style="padding:0 8px">
+      <a class="sess-item active" href="#">
+        <div class="sess-t">中宁宁杞5号价格走势</div>
+        <div class="sess-m">2 分钟前 · 5 条</div>
+      </a>
+      <a class="sess-item" href="#">
+        <div class="sess-t">特级和甲级差在哪</div>
+        <div class="sess-m">1 小时前 · 8 条</div>
+      </a>
+    </div>
+
+    <div class="sess-group">近 7 天</div>
+    <div style="padding:0 8px">
+      <a class="sess-item" href="#">
+        <div class="sess-t">预算 40 元以内有什么好货</div>
+        <div class="sess-m">昨天 · 12 条</div>
+      </a>
+      <a class="sess-item" href="#">
+        <div class="sess-t">收货后发现坏果多怎么处理</div>
+        <div class="sess-m">3 天前 · 6 条</div>
+      </a>
+      <a class="sess-item" href="#">
+        <div class="sess-t">霉变率多少算超标</div>
+        <div class="sess-m">5 天前 · 4 条</div>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============ 对话区 ============ -->
+  <main class="chat-main">
+
+    <div class="between" style="padding:10px 20px;border-bottom:1px solid var(--line);background:#fff">
+      <div class="row gap-8">
+        <span class="medium" style="font-size:14px">中宁宁杞5号价格走势</span>
+        <span class="tag tag-plain">基于平台成交数据</span>
+      </div>
+      <div class="row gap-8">
+        <button class="btn btn-ghost btn-sm">导出对话</button>
+      </div>
+    </div>
+
+    <div class="chat-scroll">
+      <div class="chat-inner">
+
+        <!-- 用户 -->
+        <div class="msg msg-user">
+          <div class="avatar" style="background:#eef0f2;color:var(--ink-2)">中</div>
+          <div class="msg-bubble">近半年中宁宁杞5号 280粒的价格走势怎么样？现在适合进货吗</div>
+        </div>
+
+        <!-- AI -->
+        <div class="msg">
+          <div class="ai-mark">杞</div>
+          <div style="min-width:0;flex:1">
+            <div class="ai-head">
+              <span class="small medium">杞市助手</span>
+              <span class="small muted">· 检索了 3 篇资料、1 组行情数据</span>
+            </div>
+
+            <div class="answer-card">
+              <p>
+                近半年中宁宁杞5号（280 粒/50g）成交均价<b>从 40.10 元/kg 涨到 46.20 元/kg，累计涨幅 15.2%</b>，
+                其中 7 月到 9 月上涨最快，10 月略有回调后再度上行。
+              </p>
+
+              <div class="chart-card">
+                <div class="chart-hd">
+                  <span class="medium">中宁 · 宁杞5号 · 280粒/50g · 成交均价</span>
+                  <span class="muted">元 / kg</span>
+                </div>
+                <div class="chart-bd">
+                  <svg viewBox="0 0 580 190" width="100%" height="190" role="img" aria-label="近半年价格折线图">
+                    <defs>
+                      <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#C22F27" stop-opacity=".16"/>
+                        <stop offset="100%" stop-color="#C22F27" stop-opacity="0"/>
+                      </linearGradient>
+                    </defs>
+
+                    <!-- 网格 -->
+                    <g stroke="#eff1f3" stroke-width="1">
+                      <line x1="40" y1="33" x2="532" y2="33"/>
+                      <line x1="40" y1="72" x2="532" y2="72"/>
+                      <line x1="40" y1="111" x2="532" y2="111"/>
+                      <line x1="40" y1="150" x2="532" y2="150"/>
+                    </g>
+                    <g fill="#aab1ba" font-size="10" text-anchor="end">
+                      <text x="32" y="36">47</text>
+                      <text x="32" y="75">44</text>
+                      <text x="32" y="114">41</text>
+                      <text x="32" y="153">38</text>
+                    </g>
+
+                    <!-- 面积 -->
+                    <path d="M40,122.7 L122,108.4 L204,113.6 L286,78.5 L368,60.3 L450,51.2 L532,43.4 L532,150 L40,150 Z" fill="url(#g1)"/>
+
+                    <!-- 折线 -->
+                    <path d="M40,122.7 L122,108.4 L204,113.6 L286,78.5 L368,60.3 L450,51.2 L532,43.4"
+                          fill="none" stroke="#C22F27" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+                    <!-- 数据点 -->
+                    <g fill="#fff" stroke="#C22F27" stroke-width="2">
+                      <circle cx="40" cy="122.7" r="3"/>
+                      <circle cx="122" cy="108.4" r="3"/>
+                      <circle cx="204" cy="113.6" r="3"/>
+                      <circle cx="286" cy="78.5" r="3"/>
+                      <circle cx="368" cy="60.3" r="3"/>
+                      <circle cx="450" cy="51.2" r="3"/>
+                      <circle cx="532" cy="43.4" r="3.5"/>
+                    </g>
+
+                    <!-- 末点标注 -->
+                    <rect x="484" y="18" width="52" height="20" rx="4" fill="#C22F27"/>
+                    <text x="510" y="32" fill="#fff" font-size="11" text-anchor="middle" font-weight="600">46.20</text>
+
+                    <!-- X 轴 -->
+                    <g fill="#aab1ba" font-size="10" text-anchor="middle">
+                      <text x="40" y="172">4月</text>
+                      <text x="122" y="172">5月</text>
+                      <text x="204" y="172">6月</text>
+                      <text x="286" y="172">7月</text>
+                      <text x="368" y="172">8月</text>
+                      <text x="450" y="172">9月</text>
+                      <text x="532" y="172">10月</text>
+                    </g>
+                  </svg>
+                </div>
+                <div class="data-note">
+                  数据来源：平台 2026-04-01 至 2026-10-26 成交订单，共 1,284 笔；口径为当日成交均价，剔除偏离中位数 3 倍以上异常值。
+                </div>
+              </div>
+
+              <p style="margin-top:14px">
+                从价格水平看，当前价处于近半年高位区间（<b>分位数 92%</b>）。历史上 9 月后进入新货集中上市期，
+                价格通常有小幅回落，但今年中宁产区 7 月降水偏多，优质果比例下降，是这轮价格坚挺的主要原因
+                <span class="cite">1</span>。
+              </p>
+              <p>
+                如果你要进货，建议：<b>大批量可分两批</b>，先在当前价位锁 60%，11 月中旬新货大量入市后再补；
+                小批量按需采购即可，不必囤货。另外注意，特级与甲级当前价差 7.70 元/kg，
+                如果用途是食品加工而非礼盒，甲级的性价比更高。
+              </p>
+
+              <div class="src-list">
+                <div class="small muted" style="margin-bottom:6px">数据来源</div>
+                <div class="src-item">
+                  <span class="src-no">1</span>
+                  <span>平台行情中心 · 中宁宁杞5号 280粒/50g 成交均价（2026-04-01 ~ 2026-10-26）· 样本 1,284 笔</span>
+                </div>
+                <div class="src-item">
+                  <span class="src-no">2</span>
+                  <span>GB/T 18672-2014《枸杞》5.2 理化指标与等级划分 · 第 7 页</span>
+                </div>
+              </div>
+
+              <div class="row gap-8" style="margin-top:14px;flex-wrap:wrap">
+                <span class="xs muted" style="margin-right:2px">继续问：</span>
+                <span class="chip">青海诺木洪同期价格呢</span>
+                <span class="chip">特级和甲级差在哪</span>
+                <span class="chip">现在哪些货源性价比高</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 用户追问 -->
+        <div class="msg msg-user">
+          <div class="avatar" style="background:#eef0f2;color:var(--ink-2)">中</div>
+          <div class="msg-bubble">那青海诺木洪的呢？同规格比哪个更划算</div>
+        </div>
+
+        <!-- AI 回答 2 -->
+        <div class="msg">
+          <div class="ai-mark">杞</div>
+          <div style="min-width:0;flex:1">
+            <div class="ai-head">
+              <span class="small medium">杞市助手</span>
+              <span class="small muted">· 调用了行情对比</span>
+            </div>
+
+            <div class="answer-card">
+              <p>
+                同规格（280 粒/50g、特级）下，<b>诺木洪当前均价 42.80 元/kg，比中宁低 3.40 元/kg（低 7.4%）</b>，
+                近半年两地的价差从 1.2 元扩大到 3.4 元，走阔明显。
+              </p>
+              <p>
+                但诺木洪的油果率普遍偏高（平台在架货源平均 2.8%，中宁为 1.1%），
+                如果做礼盒或直接零售，挑货成本会吃掉一部分价差；如果做提取或食品加工，诺木洪更划算。
+              </p>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+                <div style="border:1px solid var(--line);border-radius:var(--r);padding:12px 14px">
+                  <div class="row gap-8" style="margin-bottom:8px">
+                    <span class="small medium">宁夏中宁</span><span class="tag tag-plain">产地均价</span>
+                  </div>
+                  <div class="num" style="font-size:20px;font-weight:700">46.20<span style="font-size:11px;color:var(--ink-3);font-weight:400"> 元/kg</span></div>
+                  <div class="small muted" style="margin-top:6px">油果率均值 1.1% · 样本 812 笔</div>
+                </div>
+                <div style="border:1px solid var(--line);border-radius:var(--r);padding:12px 14px">
+                  <div class="row gap-8" style="margin-bottom:8px">
+                    <span class="small medium">青海诺木洪</span><span class="tag tag-plain">产地均价</span>
+                  </div>
+                  <div class="num" style="font-size:20px;font-weight:700">42.80<span style="font-size:11px;color:var(--ink-3);font-weight:400"> 元/kg</span></div>
+                  <div class="small muted" style="margin-top:6px">油果率均值 2.8% · 样本 472 笔</div>
+                </div>
+              </div>
+
+              <div class="src-list">
+                <div class="small muted" style="margin-bottom:6px">数据来源</div>
+                <div class="src-item">
+                  <span class="src-no">1</span>
+                  <span>平台行情中心 · 双产区对比（280 粒/50g、特级）· 2026-04-01 ~ 2026-10-26</span>
+                </div>
+                <div class="src-item">
+                  <span class="src-no">2</span>
+                  <span>平台在架商品 AI 评估汇总 · 油果率均值（样本：中宁 812 件 / 诺木洪 472 件）</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 生成中 -->
+        <div class="msg">
+          <div class="ai-mark">杞</div>
+          <div style="flex:1">
+            <div class="stage-bar"><span class="stage-dot"></span>正在查询符合条件的货源<span class="typing"><i></i><i></i><i></i></span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 输入区 -->
+    <div class="chat-input-wrap">
+      <div style="max-width:760px;margin:0 auto">
+        <div class="chat-input">
+          <textarea rows="1" placeholder="问点什么，比如「40 元以内有哪些特级货源」"></textarea>
+          <button class="btn btn-primary" style="height:34px">发送</button>
+        </div>
+        <div class="row gap-8" style="margin-top:8px;flex-wrap:wrap">
+          <span class="chip">这周行情怎么样</span>
+          <span class="chip">特级怎么判定</span>
+          <span class="chip">售后怎么申请</span>
+          <span style="margin-left:auto" class="xs muted">回答由 AI 生成，仅供参考，不构成交易依据</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ============ 引用详情 ============ -->
+  <aside class="chat-ref">
+    <div class="between" style="padding:14px 18px;border-bottom:1px solid var(--line)">
+      <span class="small strong">引用原文</span>
+      <span class="xs muted">第 2 条</span>
+    </div>
+
+    <div class="ref-block">
+      <div class="ref-doc">GB/T 18672-2014 《枸杞》</div>
+      <div class="ref-meta">
+        <span>5.2 理化指标</span>
+        <span>第 7 页</span>
+        <span class="tag tag-outline" style="height:18px">国家标准</span>
+      </div>
+
+      <div class="quote-text">
+        5.2.2 枸杞质量等级分为特优、特级、甲级、乙级四个等级，
+        各等级应符合表 2 的规定。<br><br>
+        <mark>特级：颗粒大小均匀，色泽一致，无明显霉变粒，破碎粒及不完善粒总量不超过 2.0%；</mark><br><br>
+        5.2.3 水分含量应不大于 13.0%，总糖（以葡萄糖计）应不小于 45.0%。
+      </div>
+
+      <div class="notice notice-warn" style="margin-top:14px;padding:10px 12px;font-size:12px">
+        标准中的水分、总糖等理化指标，平台不检测。商品页的等级仅依据外观维度判定。
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="small strong" style="margin-bottom:8px">同文档其他命中</div>
+        <div class="small dim" style="line-height:1.8">
+          · 4.1 术语与定义：霉变粒<br>
+          · 6.3 检验方法：不完善粒检验
+        </div>
+      </div>
+
+      <button class="btn btn-block btn-sm" style="margin-top:16px">打开文档原文</button>
+    </div>
+  </aside>
+
+</div>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

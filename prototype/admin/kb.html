@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>知识库 · 杞市后台</title>
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+  .doc-t { font-size: 13px; font-weight: 500; line-height: 1.4; max-width: 300px; white-space: normal; }
+  .doc-sub { font-size: 11.5px; color: var(--ink-4); margin-top: 2px; white-space: normal; }
+
+  /* 左树占位后表格变窄：除文档名外一律不换行 */
+  .table thead th, .table tbody td { padding: 10px 9px; white-space: nowrap; }
+  .table .tag { white-space: nowrap; }
+  .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line-2); }
+  .ss { padding: 14px 16px; border-right: 1px solid var(--line-2); }
+  .ss:last-child { border-right: 0; }
+  .ss-k { font-size: 11.5px; color: var(--ink-3); }
+  .ss-v { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; letter-spacing: -.02em; }
+  .ss-v i { font-size: 11px; font-weight: 400; color: var(--ink-3); font-style: normal; margin-left: 2px; }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-hd">
+      <span class="logo" style="font-size:15px"><span class="logo-mark" style="width:24px;height:24px;font-size:12px">杞</span>杞市后台</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-group">
+        <a class="sidebar-link" href="dashboard.html">运营看板</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">交易</div>
+        <a class="sidebar-link" href="audit.html">商品审核 <span class="badge">15</span></a>
+        <a class="sidebar-link" href="products.html">商品管理</a>
+        <a class="sidebar-link" href="#">订单管理</a>
+        <a class="sidebar-link" href="#">售后仲裁 <span class="badge" style="background:var(--warn)">2</span></a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">卖家与用户</div>
+        <a class="sidebar-link" href="#">卖家与资质 <span class="badge" style="background:var(--ink-4)">3</span></a>
+        <a class="sidebar-link" href="#">用户管理</a>
+        <a class="sidebar-link" href="#">角色权限</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">智能体</div>
+        <a class="sidebar-link active" href="kb.html">知识库</a>
+        <a class="sidebar-link" href="#">Agent 配置</a>
+        <a class="sidebar-link" href="#">链路追踪</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">系统</div>
+        <a class="sidebar-link" href="#">模型与阈值</a>
+        <a class="sidebar-link" href="#">审计日志</a>
+      </div>
+    </nav>
+    <div style="padding:12px;border-top:1px solid var(--line-2)">
+      <div class="row gap-8" style="padding:6px 8px">
+        <div class="avatar">李</div>
+        <div style="min-width:0">
+          <div class="small" style="font-weight:500">李审核</div>
+          <div class="xs muted">审核员 · 工号 A023</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+
+    <div class="admin-top">
+      <div class="crumb">
+        <span>智能体</span><span class="sep">/</span><span class="cur">知识库</span>
+      </div>
+      <div style="margin-left:auto" class="row gap-8">
+        <a class="btn btn-sm" href="#">召回测试</a>
+        <button class="btn btn-sm btn-primary">上传文档</button>
+      </div>
+    </div>
+
+    <div class="admin-body">
+
+      <!-- 左树右表 -->
+      <div class="tree-layout">
+
+        <!-- 左：分类树 -->
+        <aside class="tree-panel">
+          <div class="tree-hd">
+            <span class="tree-hd-t">知识分类</span>
+            <span class="xs muted">68 篇</span>
+          </div>
+
+          <div class="tree-search">
+            <input class="input" placeholder="搜索文档标题">
+          </div>
+
+          <div class="tree-body">
+            <div class="tree-node root active"><span class="tree-caret open">▶</span><span class="tree-name">全部文档</span><span class="tree-cnt">68</span></div>
+
+            <div class="tree-node lv1"><span class="tree-caret open">▶</span><span class="tree-name">国家标准</span><span class="tree-cnt">12</span></div>
+            <div class="tree-node lv2 active"><span class="tree-dot"></span><span class="tree-name">枸杞分级与术语</span><span class="tree-cnt">4</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">检测方法</span><span class="tree-cnt">6</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">限量与污染物</span><span class="tree-cnt">2</span></div>
+
+            <div class="tree-node lv1"><span class="tree-caret">▶</span><span class="tree-name">行业与地方标准</span><span class="tree-cnt">9</span></div>
+            <div class="tree-node lv1"><span class="tree-caret open">▶</span><span class="tree-name">平台规则</span><span class="tree-cnt">16</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">交易与售后</span><span class="tree-cnt">9</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">审核标准</span><span class="tree-cnt">7</span></div>
+
+            <div class="tree-node lv1"><span class="tree-caret">▶</span><span class="tree-name">常见问题 FAQ</span><span class="tree-cnt">24</span></div>
+            <div class="tree-node lv1"><span class="tree-caret">▶</span><span class="tree-name">品种与产区</span><span class="tree-cnt">7</span></div>
+
+            <div class="tree-divider"></div>
+
+            <div class="tree-node lv1"><span class="tree-name" style="color:var(--ink-3);font-size:12px">按状态</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">已索引</span><span class="tree-cnt">61</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">解析中</span><span class="tree-cnt">2</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">失败</span><span class="tree-cnt">1</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">已下线</span><span class="tree-cnt">4</span></div>
+          </div>
+
+          <div class="tree-foot">
+            最近入库：2026-10-24 15:20
+          </div>
+        </aside>
+
+        <!-- 右：表 -->
+        <div class="table-panel">
+
+          <div class="stat-strip">
+            <div class="ss"><div class="ss-k">文档总数</div><div class="ss-v">68<i>篇</i></div></div>
+            <div class="ss"><div class="ss-k">知识分块</div><div class="ss-v">4,182<i>块</i></div></div>
+            <div class="ss"><div class="ss-k">近 7 天被引用</div><div class="ss-v">1,246<i>次</i></div></div>
+            <div class="ss"><div class="ss-k">入库失败</div><div class="ss-v" style="color:var(--danger)">1<i>篇</i></div></div>
+          </div>
+
+          <div class="table-toolbar">
+            <div class="row gap-8">
+              <select class="select" style="width:118px;height:30px;font-size:13px">
+                <option>全部状态</option>
+                <option>已索引</option>
+                <option>解析中</option>
+                <option>失败</option>
+              </select>
+              <select class="select" style="width:118px;height:30px;font-size:13px">
+                <option>全部类型</option>
+                <option>国家标准</option>
+                <option>平台规则</option>
+                <option>FAQ</option>
+              </select>
+              <label class="check" style="margin-left:4px"><input type="checkbox"> 仅看已失效</label>
+            </div>
+            <div class="row gap-8">
+              <button class="btn btn-sm">重新入库</button>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width:32px"><input type="checkbox"></th>
+                  <th style="width:300px">文档</th>
+                  <th style="width:104px">分类</th>
+                  <th class="num" style="width:56px">分块</th>
+                  <th style="width:92px">生效日期</th>
+                  <th style="width:72px">状态</th>
+                  <th class="num" style="width:88px">近 7 天引用</th>
+                  <th style="width:118px">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="doc-t">GB/T 18672-2014《枸杞》</div>
+                    <div class="doc-sub">国家标准 · 32 页 · 更新于 2026-09-12</div>
+                  </td>
+                  <td class="small">分级与术语</td>
+                  <td class="num">186</td>
+                  <td class="small num">2014-10-01</td>
+                  <td><span class="tag tag-ok" style="height:20px">已索引</span></td>
+                  <td class="num">412</td>
+                  <td>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">分块</button>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">下线</button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="doc-t">平台商品审核标准（外观维度）</div>
+                    <div class="doc-sub">平台规则 · 8 页 · 更新于 2026-10-08</div>
+                  </td>
+                  <td class="small">审核标准</td>
+                  <td class="num">64</td>
+                  <td class="small num">2026-10-08</td>
+                  <td><span class="tag tag-ok" style="height:20px">已索引</span></td>
+                  <td class="num">286</td>
+                  <td>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">分块</button>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">下线</button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="doc-t">售后与纠纷处理规则 V2</div>
+                    <div class="doc-sub">平台规则 · 6 页 · 更新于 2026-09-28</div>
+                  </td>
+                  <td class="small">交易与售后</td>
+                  <td class="num">48</td>
+                  <td class="small num">2026-10-01</td>
+                  <td><span class="tag tag-ok" style="height:20px">已索引</span></td>
+                  <td class="num">198</td>
+                  <td>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">分块</button>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">下线</button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="doc-t">中宁产区枸杞种植与晾晒工艺说明</div>
+                    <div class="doc-sub">品种与产区 · 14 页 · 更新于 2026-10-22</div>
+                  </td>
+                  <td class="small">品种与产区</td>
+                  <td class="num">—</td>
+                  <td class="small num">2026-10-22</td>
+                  <td><span class="tag tag-warn" style="height:20px">解析中</span></td>
+                  <td class="num">—</td>
+                  <td>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">查看进度</button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="doc-t">GB 2763-2021 食品中农药最大残留限量（摘录）</div>
+                    <div class="doc-sub">国家标准 · 扫描件 · 上传于 2026-10-20</div>
+                  </td>
+                  <td class="small">限量与污染物</td>
+                  <td class="num">—</td>
+                  <td class="small num">—</td>
+                  <td><span class="tag tag-danger" style="height:20px">失败</span></td>
+                  <td class="num">—</td>
+                  <td>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">查看原因</button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="doc-t">枸杞含水率与贮存条件常见问答</div>
+                    <div class="doc-sub">FAQ · 4 页 · 更新于 2026-09-15</div>
+                  </td>
+                  <td class="small">FAQ</td>
+                  <td class="num">32</td>
+                  <td class="small num">2026-09-15</td>
+                  <td><span class="tag tag-ok" style="height:20px">已索引</span></td>
+                  <td class="num">94</td>
+                  <td>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">分块</button>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">下线</button>
+                  </td>
+                </tr>
+
+                <tr style="opacity:.6">
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="doc-t">GB/T 18672-2004《枸杞》（旧版）</div>
+                    <div class="doc-sub">国家标准 · 旧版本 · 于 2026-09-12 下线</div>
+                  </td>
+                  <td class="small">分级与术语</td>
+                  <td class="num">164</td>
+                  <td class="small num">2004-06-01</td>
+                  <td><span class="tag tag-plain" style="height:20px">已下线</span></td>
+                  <td class="num">—</td>
+                  <td>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">查看</button>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-foot">
+            <div class="row gap-8">
+              <span class="small muted">共 68 篇 · 已索引 61 篇</span>
+            </div>
+            <div class="row gap-8">
+              <button class="btn btn-sm">上一页</button>
+              <button class="btn btn-sm btn-primary">1</button>
+              <button class="btn btn-sm">2</button>
+              <button class="btn btn-sm">3</button>
+              <button class="btn btn-sm">下一页</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="notice notice-warn" style="margin-top:16px">
+        <div>
+          <div class="notice-title">有 1 篇文档入库失败</div>
+          《GB 2763-2021 食品中农药最大残留限量（摘录）》是扫描件，没有文本层，需要先做 OCR 再上传。
+          <a href="#" style="color:#7c4404;text-decoration:underline">查看详情</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

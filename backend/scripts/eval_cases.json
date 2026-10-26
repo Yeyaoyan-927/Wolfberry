@@ -1,0 +1,10 @@
+[
+  {"question": "特级的判定标准是什么？", "expected": ["枸杞分级"]},
+  {"question": "商品被驳回后怎么重新提交？", "expected": ["审核规则"]},
+  {"question": "枸杞买回来怎么保存？", "expected": ["储存"]},
+  {"question": "霉变率超过多少不能上架？", "expected": ["枸杞分级", "审核规则"]},
+  {"question": "水分超过多少算不合格？", "expected": ["枸杞分级"]},
+  {"question": "油果是什么意思？", "expected": ["枸杞分级"]},
+  {"question": "收货后发现坏果多怎么处理？", "expected": ["储存", "审核规则"]},
+  {"question": "180粒和280粒是什么意思？", "expected": ["枸杞分级"]}
+]

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>运营看板 · 杞市后台</title>
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+  .grid-12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+  .c8 { grid-column: span 8; }
+  .c4 { grid-column: span 4; }
+  .c6 { grid-column: span 6; }
+  .c12 { grid-column: span 12; }
+
+  .todo-bar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 18px; border-radius: var(--r-lg);
+    background: linear-gradient(90deg, #fdf2f1, #fff 70%);
+    border: 1px solid var(--brand-line);
+    margin-bottom: 16px;
+  }
+  .todo-item { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+  .todo-num { font-size: 17px; font-weight: 700; color: var(--brand); font-variant-numeric: tabular-nums; }
+
+  .audit-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 0; border-bottom: 1px solid var(--line-2);
+  }
+  .audit-row:last-child { border-bottom: 0; }
+  .ar-img {
+    width: 46px; height: 46px; border-radius: var(--r-sm); flex-shrink: 0;
+    background: linear-gradient(150deg, #f7efea, #ece0d8);
+    position: relative; overflow: hidden;
+  }
+  .ar-img::after {
+    content: ""; position: absolute; inset: 0; margin: auto;
+    width: 48%; height: 48%; border-radius: 999px;
+    background: radial-gradient(circle at 35% 30%, #E8684F, #C22F27 55%, #8E1D18);
+  }
+  .ar-t { font-size: 13px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ar-m { font-size: 11.5px; color: var(--ink-3); margin-top: 3px; }
+
+  .legend-row { display: flex; gap: 16px; font-size: 11.5px; color: var(--ink-3); }
+  .legend-row i { display: inline-flex; align-items: center; gap: 5px; font-style: normal; }
+  .legend-row i::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: currentColor; }
+
+  .hd-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .hd-t { font-size: 14px; font-weight: 600; }
+
+  .bar-list { display: flex; flex-direction: column; gap: 11px; margin-top: 4px; }
+  .bl-item { display: grid; grid-template-columns: 60px 1fr 46px; gap: 10px; align-items: center; font-size: 12.5px; }
+  .bl-track { height: 6px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+  .bl-fill { height: 100%; border-radius: 999px; }
+
+  @media (max-width: 1180px) {
+    .c8, .c4, .c6 { grid-column: span 12; }
+  }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <!-- ============ 侧栏 ============ -->
+  <aside class="sidebar">
+    <div class="sidebar-hd">
+      <span class="logo" style="font-size:15px"><span class="logo-mark" style="width:24px;height:24px;font-size:12px">杞</span>杞市后台</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-group">
+        <a class="sidebar-link active" href="dashboard.html">运营看板</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">交易</div>
+        <a class="sidebar-link" href="audit.html">商品审核 <span class="badge">15</span></a>
+        <a class="sidebar-link" href="products.html">商品管理</a>
+        <a class="sidebar-link" href="#">订单管理</a>
+        <a class="sidebar-link" href="#">售后仲裁 <span class="badge" style="background:var(--warn)">2</span></a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">卖家与用户</div>
+        <a class="sidebar-link" href="#">卖家与资质 <span class="badge" style="background:var(--ink-4)">3</span></a>
+        <a class="sidebar-link" href="#">用户管理</a>
+        <a class="sidebar-link" href="#">角色权限</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">智能体</div>
+        <a class="sidebar-link" href="kb.html">知识库</a>
+        <a class="sidebar-link" href="#">Agent 配置</a>
+        <a class="sidebar-link" href="#">链路追踪</a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">系统</div>
+        <a class="sidebar-link" href="#">模型与阈值</a>
+        <a class="sidebar-link" href="#">审计日志</a>
+      </div>
+    </nav>
+
+    <div style="padding:12px;border-top:1px solid var(--line-2)">
+      <div class="row gap-8" style="padding:6px 8px">
+        <div class="avatar">李</div>
+        <div style="min-width:0">
+          <div class="small" style="font-weight:500">李审核</div>
+          <div class="xs muted">审核员 · 工号 A023</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ 主区 ============ -->
+  <main class="admin-main">
+
+    <div class="admin-top">
+      <div class="crumb">
+        <span>后台</span><span class="sep">/</span><span class="cur">运营看板</span>
+      </div>
+      <div style="margin-left:auto" class="row gap-12">
+        <select class="select" style="width:120px;height:32px;font-size:13px">
+          <option>近 7 天</option>
+          <option>近 30 天</option>
+          <option>本月</option>
+        </select>
+        <a class="btn btn-sm" href="audit.html">去审核</a>
+      </div>
+    </div>
+
+    <div class="admin-body">
+
+      <!-- 待办 -->
+      <div class="todo-bar">
+        <span class="small" style="color:var(--brand-dark);font-weight:600">待处理</span>
+        <div class="todo-item"><span class="todo-num">15</span> 件商品待审核</div>
+        <span style="color:var(--line)">|</span>
+        <div class="todo-item"><span class="todo-num">2</span> 件已超 4 小时</div>
+        <span style="color:var(--line)">|</span>
+        <div class="todo-item"><span class="todo-num">3</span> 个卖家资质待核</div>
+        <span style="color:var(--line)">|</span>
+        <div class="todo-item"><span class="todo-num">2</span> 单售后待仲裁</div>
+        <a href="audit.html" style="margin-left:auto;font-size:13px;color:var(--brand-dark);font-weight:500">前往处理 →</a>
+      </div>
+
+      <!-- KPI -->
+      <div class="kpi-grid" style="margin-bottom:16px">
+        <div class="kpi">
+          <div class="kpi-label">今日成交额</div>
+          <div class="kpi-value">¥86,420</div>
+          <div class="kpi-foot"><span class="chg chg-up"><span class="chg-arrow">▲</span>12.4%</span> 较昨日</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">今日订单</div>
+          <div class="kpi-value">24<span class="suffix">笔</span></div>
+          <div class="kpi-foot"><span class="chg chg-up"><span class="chg-arrow">▲</span>4 笔</span> 较昨日</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">平均审核时长</div>
+          <div class="kpi-value">78<span class="suffix">秒</span></div>
+          <div class="kpi-foot"><span class="chg chg-down"><span class="chg-arrow">▼</span>16 秒</span> 较上周</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">审核通过率</div>
+          <div class="kpi-value">72.6<span class="suffix">%</span></div>
+          <div class="kpi-foot">驳回 21.4% · 改级 6.0%</div>
+        </div>
+      </div>
+
+      <div class="grid-12">
+
+        <!-- 成交趋势 -->
+        <div class="card c8">
+          <div class="card-hd">
+            <div>
+              <div class="card-title">成交趋势</div>
+              <div class="xs muted" style="margin-top:2px">近 14 天成交额与订单量</div>
+            </div>
+            <div class="legend-row">
+              <i style="color:#C22F27">成交额</i>
+              <i style="color:#9aa3ad">订单量</i>
+            </div>
+          </div>
+          <div style="padding:12px 14px 4px">
+            <svg viewBox="0 0 680 240" width="100%" height="240" role="img" aria-label="成交趋势">
+              <defs>
+                <linearGradient id="gk" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#C22F27" stop-opacity=".14"/>
+                  <stop offset="100%" stop-color="#C22F27" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+
+              <g stroke="#eff1f3">
+                <line x1="44" y1="40" x2="660" y2="40"/>
+                <line x1="44" y1="90" x2="660" y2="90"/>
+                <line x1="44" y1="140" x2="660" y2="140"/>
+                <line x1="44" y1="190" x2="660" y2="190"/>
+              </g>
+              <g fill="#aab1ba" font-size="10" text-anchor="end">
+                <text x="36" y="43">12万</text>
+                <text x="36" y="93">8万</text>
+                <text x="36" y="143">4万</text>
+                <text x="36" y="193">0</text>
+              </g>
+
+              <path d="M44,150 L92,138 L140,146 L188,120 L236,128 L284,104 L332,112 L380,92 L428,98 L476,80 L524,90 L572,68 L620,74 L660,60 L660,190 L44,190 Z" fill="url(#gk)"/>
+              <path d="M44,150 L92,138 L140,146 L188,120 L236,128 L284,104 L332,112 L380,92 L428,98 L476,80 L524,90 L572,68 L620,74 L660,60"
+                    fill="none" stroke="#C22F27" stroke-width="2" stroke-linejoin="round"/>
+
+              <path d="M44,170 L92,164 L140,172 L188,158 L236,162 L284,150 L332,156 L380,146 L428,150 L476,140 L524,148 L572,134 L620,140 L660,132"
+                    fill="none" stroke="#9aa3ad" stroke-width="1.6" stroke-dasharray="4 3" stroke-linejoin="round"/>
+
+              <g fill="#aab1ba" font-size="10" text-anchor="middle">
+                <text x="44" y="214">10/13</text>
+                <text x="188" y="214">10/16</text>
+                <text x="332" y="214">10/19</text>
+                <text x="476" y="214">10/22</text>
+                <text x="620" y="214">10/25</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 待审核列表 -->
+        <div class="card c4">
+          <div class="card-hd">
+            <div class="card-title">待审核</div>
+            <a href="audit.html" class="xs" style="color:var(--brand-dark)">全部 15 条 →</a>
+          </div>
+          <div style="padding:4px 18px 12px">
+            <a class="audit-row" href="audit.html">
+              <div class="ar-img"></div>
+              <div class="grow" style="min-width:0">
+                <div class="ar-t">中宁宁杞5号 特级 280粒</div>
+                <div class="ar-m">自述 特级 · AI 甲级</div>
+              </div>
+              <span class="flag flag-danger">高报</span>
+            </a>
+            <a class="audit-row" href="audit.html">
+              <div class="ar-img"></div>
+              <div class="grow" style="min-width:0">
+                <div class="ar-t">诺木洪宁杞7号 特优 220粒</div>
+                <div class="ar-m">自述 特优 · AI 特优</div>
+              </div>
+              <span class="flag flag-ok">一致</span>
+            </a>
+            <a class="audit-row" href="audit.html">
+              <div class="ar-img"></div>
+              <div class="grow" style="min-width:0">
+                <div class="ar-t">靖远宁杞1号 甲级 380粒</div>
+                <div class="ar-m">自述 甲级 · AI 乙级</div>
+              </div>
+              <span class="flag flag-warn">高报 1 级</span>
+            </a>
+            <a class="audit-row" href="audit.html">
+              <div class="ar-img"></div>
+              <div class="grow" style="min-width:0">
+                <div class="ar-t">精河宁杞5号 特级 280粒</div>
+                <div class="ar-m">自述 特级 · 评估置信 0.41</div>
+              </div>
+              <span class="flag flag-muted">待人工</span>
+            </a>
+            <a class="audit-row" href="audit.html">
+              <div class="ar-img"></div>
+              <div class="grow" style="min-width:0">
+                <div class="ar-t">中宁大麻叶 特级 280粒</div>
+                <div class="ar-m">等待 3 小时 12 分</div>
+              </div>
+              <span class="tag tag-warn" style="height:20px">临近超时</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 等级分布 -->
+        <div class="card c6">
+          <div class="card-hd">
+            <div class="card-title">在架商品等级分布</div>
+            <span class="xs muted">共 3,286 件</span>
+          </div>
+          <div style="padding:18px 20px 10px">
+            <svg viewBox="0 0 560 170" width="100%" height="170" role="img" aria-label="等级分布柱状图">
+              <g stroke="#eff1f3">
+                <line x1="40" y1="20" x2="540" y2="20"/>
+                <line x1="40" y1="60" x2="540" y2="60"/>
+                <line x1="40" y1="100" x2="540" y2="100"/>
+                <line x1="40" y1="140" x2="540" y2="140"/>
+              </g>
+
+              <g>
+                <rect x="78" y="34" width="56" height="106" rx="3" fill="#8a6a16" opacity=".85"/>
+                <rect x="178" y="18" width="56" height="122" rx="3" fill="#C22F27" opacity=".85"/>
+                <rect x="278" y="52" width="56" height="88" rx="3" fill="#1d4ed8" opacity=".7"/>
+                <rect x="378" y="88" width="56" height="52" rx="3" fill="#9aa3ad"/>
+                <rect x="478" y="122" width="56" height="18" rx="3" fill="#c9cfd6"/>
+              </g>
+
+              <g fill="#4a5159" font-size="11" text-anchor="middle" font-weight="600">
+                <text x="106" y="28">682</text>
+                <text x="206" y="12">1,146</text>
+                <text x="306" y="46">1,024</text>
+                <text x="406" y="82">382</text>
+                <text x="506" y="116">52</text>
+              </g>
+
+              <g fill="#838b95" font-size="11" text-anchor="middle">
+                <text x="106" y="158">特优</text>
+                <text x="206" y="158">特级</text>
+                <text x="306" y="158">甲级</text>
+                <text x="406" y="158">乙级</text>
+                <text x="506" y="158">等外</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 驳回原因 -->
+        <div class="card c6">
+          <div class="card-hd">
+            <div class="card-title">近 30 天驳回原因</div>
+            <span class="xs muted">共 168 条</span>
+          </div>
+          <div style="padding:18px 20px">
+            <div class="bar-list">
+              <div class="bl-item">
+                <span>等级高报</span>
+                <div class="bl-track"><div class="bl-fill" style="width:100%;background:var(--danger)"></div></div>
+                <span class="num right">62</span>
+              </div>
+              <div class="bl-item">
+                <span>图片质量</span>
+                <div class="bl-track"><div class="bl-fill" style="width:68%;background:var(--warn)"></div></div>
+                <span class="num right">42</span>
+              </div>
+              <div class="bl-item">
+                <span>描述不符</span>
+                <div class="bl-track"><div class="bl-fill" style="width:55%;background:var(--ink-3)"></div></div>
+                <span class="num right">34</span>
+              </div>
+              <div class="bl-item">
+                <span>图片数量不足</span>
+                <div class="bl-track"><div class="bl-fill" style="width:32%;background:var(--ink-4)"></div></div>
+                <span class="num right">20</span>
+              </div>
+              <div class="bl-item">
+                <span>价格异常</span>
+                <div class="bl-track"><div class="bl-fill" style="width:16%;background:var(--ink-4)"></div></div>
+                <span class="num right">10</span>
+              </div>
+            </div>
+
+            <div class="notice notice-warn" style="margin-top:18px;padding:10px 12px;font-size:12px">
+              等级高报占驳回量的 37%，为主要问题。建议对红标卖家加强发布引导。
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

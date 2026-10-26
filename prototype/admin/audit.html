@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>商品审核 · 杞市后台</title>
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+  .queue-bar {
+    display: flex; align-items: center; gap: 18px;
+    padding: 0 24px; height: 46px;
+    background: #fff; border-bottom: 1px solid var(--line);
+  }
+  .qitem { display: flex; align-items: baseline; gap: 5px; font-size: 12.5px; color: var(--ink-3); }
+  .qitem b { font-size: 16px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .sec { padding: 16px 18px; border-bottom: 1px solid var(--line-2); }
+  .sec:last-child { border-bottom: 0; }
+  .sec-t {
+    font-size: 11px; font-weight: 600; color: var(--ink-3);
+    letter-spacing: .06em; margin-bottom: 10px;
+  }
+
+  .kv-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; padding: 4px 0; }
+  .kv-row .k { color: var(--ink-3); flex-shrink: 0; }
+  .kv-row .v { color: var(--ink); text-align: right; }
+
+  .claim-grade {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: var(--r);
+    background: var(--bg-2); border: 1px solid var(--line-2);
+  }
+
+  .mid-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-bottom: 1px solid var(--line-2); background: #fff;
+    position: sticky; top: 0; z-index: 5;
+  }
+
+  .img-big {
+    aspect-ratio: 4/3; border-radius: var(--r);
+    border: 1px solid var(--line);
+    background:
+      radial-gradient(circle at 30% 25%, #e8d7cf 0%, transparent 45%),
+      linear-gradient(150deg, #f6ede8, #ece0d8);
+    position: relative; overflow: hidden;
+    display: grid; place-items: center;
+  }
+  .img-big::after {
+    content: ""; width: 54%; height: 54%; border-radius: 999px;
+    background: radial-gradient(circle at 35% 30%, #E8684F 0%, #C22F27 55%, #8E1D18 100%);
+    box-shadow: 22px 10px 0 -6px #D2523C, -20px 12px 0 -7px #A8261E;
+  }
+  .img-big .frame { position: absolute; border: 2px dashed; border-radius: 3px; }
+
+  .op-group { display: flex; flex-direction: column; gap: 8px; }
+  .op-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 42px; padding: 0 14px;
+    border-radius: var(--r); border: 1px solid var(--line);
+    background: #fff; font: inherit; font-size: 14px; color: var(--ink);
+    cursor: pointer; transition: all .14s var(--ease);
+  }
+  .op-btn:hover { border-color: #d6d9de; background: var(--bg-2); }
+  .op-btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 500; }
+  .op-btn.primary:hover { background: var(--brand-dark); }
+  .op-btn.danger { color: var(--danger); border-color: var(--danger-line); background: var(--danger-soft); }
+  .op-btn.focus { box-shadow: 0 0 0 3px rgba(189, 38, 38, .12); }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-hd">
+      <span class="logo" style="font-size:15px"><span class="logo-mark" style="width:24px;height:24px;font-size:12px">杞</span>杞市后台</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-group">
+        <a class="sidebar-link" href="dashboard.html">运营看板</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">交易</div>
+        <a class="sidebar-link active" href="audit.html">商品审核 <span class="badge">15</span></a>
+        <a class="sidebar-link" href="products.html">商品管理</a>
+        <a class="sidebar-link" href="#">订单管理</a>
+        <a class="sidebar-link" href="#">售后仲裁 <span class="badge" style="background:var(--warn)">2</span></a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">卖家与用户</div>
+        <a class="sidebar-link" href="#">卖家与资质 <span class="badge" style="background:var(--ink-4)">3</span></a>
+        <a class="sidebar-link" href="#">用户管理</a>
+        <a class="sidebar-link" href="#">角色权限</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">智能体</div>
+        <a class="sidebar-link" href="kb.html">知识库</a>
+        <a class="sidebar-link" href="#">Agent 配置</a>
+        <a class="sidebar-link" href="#">链路追踪</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">系统</div>
+        <a class="sidebar-link" href="#">模型与阈值</a>
+        <a class="sidebar-link" href="#">审计日志</a>
+      </div>
+    </nav>
+    <div style="padding:12px;border-top:1px solid var(--line-2)">
+      <div class="row gap-8" style="padding:6px 8px">
+        <div class="avatar">李</div>
+        <div style="min-width:0">
+          <div class="small" style="font-weight:500">李审核</div>
+          <div class="xs muted">审核员 · 工号 A023</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+
+    <div class="admin-top">
+      <div class="crumb">
+        <span>交易</span><span class="sep">/</span><span class="cur">商品审核</span>
+      </div>
+      <span class="tag tag-plain" style="margin-left:8px">风险优先</span>
+      <div style="margin-left:auto" class="row gap-8">
+        <button class="btn btn-sm">上一条</button>
+        <button class="btn btn-sm">下一条 →</button>
+        <button class="btn btn-sm btn-ghost">暂停接单</button>
+      </div>
+    </div>
+
+    <div class="queue-bar">
+      <div class="qitem">待审核 <b>15</b></div>
+      <div class="qitem">今日已审 <b>32</b></div>
+      <div class="qitem">平均耗时 <b>78</b> 秒</div>
+      <div class="qitem" style="color:var(--danger)">超时 <b style="color:var(--danger)">2</b></div>
+      <div style="margin-left:auto" class="row gap-12">
+        <span class="xs muted">队列进度</span>
+        <div style="width:120px;height:4px;background:var(--bg);border-radius:999px;overflow:hidden">
+          <div style="width:32%;height:100%;background:var(--brand)"></div>
+        </div>
+        <span class="xs muted">3 / 18</span>
+      </div>
+    </div>
+
+    <div class="audit-shell">
+
+      <!-- ==================== 左：商品与卖家 ==================== -->
+      <div class="audit-col" style="background:#fff">
+        <div class="sec">
+          <div class="between" style="margin-bottom:8px">
+            <span class="xs muted num">GQ-20261026-0231</span>
+            <span class="xs muted">提交于 12:08</span>
+          </div>
+          <div style="font-size:15px;font-weight:600;line-height:1.45;letter-spacing:-.01em">
+            中宁宁杞5号 特级 280粒/50g 2026 新货 产地直发
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-t">自述与报价</div>
+          <div class="claim-grade">
+            <div>
+              <div class="xs muted">卖家自述等级</div>
+              <div style="margin-top:4px"><span class="grade grade-b" style="height:24px;font-size:13px">特级</span></div>
+            </div>
+            <div style="margin-left:auto;text-align:right">
+              <div class="xs muted">报价</div>
+              <div class="num" style="font-size:18px;font-weight:700;color:var(--brand);margin-top:3px">¥46.20<span style="font-size:11px;color:var(--ink-3);font-weight:400">/kg</span></div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="kv-row"><span class="k">品种 / 规格</span><span class="v">宁杞5号 · 280 粒/50g</span></div>
+            <div class="kv-row"><span class="k">产区</span><span class="v">宁夏中宁</span></div>
+            <div class="kv-row"><span class="k">库存 / 起订</span><span class="v num">1,200 kg / 50 kg</span></div>
+            <div class="kv-row"><span class="k">含水率（自述）</span><span class="v num">12.4%</span></div>
+            <div class="kv-row"><span class="k">图片数量</span><span class="v num">4 张</span></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-t">卖家信息</div>
+          <div class="row gap-8" style="margin-bottom:10px">
+            <div class="avatar" style="width:32px;height:32px">杞</div>
+            <div style="min-width:0">
+              <div class="small medium">中宁杞源合作社</div>
+              <div class="xs muted">企业认证 · 产地认证 · 评分 4.8</div>
+            </div>
+          </div>
+          <div class="kv-row"><span class="k">累计发布</span><span class="v num">42 件</span></div>
+          <div class="kv-row"><span class="k">累计驳回</span><span class="v num">3 次</span></div>
+          <div class="kv-row">
+            <span class="k">等级高报</span>
+            <span class="v"><span class="flag flag-danger" style="justify-content:flex-end">90 天内 1 次</span></span>
+          </div>
+          <div class="kv-row"><span class="k">成交</span><span class="v num">326 笔 · 无纠纷</span></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-t">同类行情参考</div>
+          <div class="kv-row"><span class="k">近 30 天成交均价</span><span class="v num">¥44.80</span></div>
+          <div class="kv-row"><span class="k">本单报价偏离</span><span class="v" style="color:#C22F27;font-weight:600">+3.1%</span></div>
+          <div class="kv-row"><span class="k">在架同规格</span><span class="v num">86 件</span></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-t">卖家描述</div>
+          <div class="small dim" style="line-height:1.75">
+            2026 年 7 月采摘，自然晾晒后人工挑选。果形偏长，色泽深红均匀，含水率控制在 12.5% 以内。
+            本批次共 6 吨，已分三个规格，本页为 280 粒档。
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 中：图片 ==================== -->
+      <div class="audit-col" style="background:var(--bg)">
+        <div class="mid-head">
+          <div class="segmented" data-toggle-group="im">
+            <button class="active" data-toggle="raw">实拍图 4</button>
+            <button data-toggle="mask">AI 标注图</button>
+            <button data-toggle="gate">门禁结果</button>
+          </div>
+          <div class="row gap-8">
+            <span class="xs muted">点击图片放大 · ← → 切换</span>
+            <button class="btn btn-sm">下载原图</button>
+          </div>
+        </div>
+
+        <div style="padding:18px">
+          <div class="audit-img-grid">
+            <div class="audit-img">
+              <div class="ph"></div>
+              <span class="idx">1 全貌</span>
+              <span class="ov">2000×1500</span>
+            </div>
+            <div class="audit-img">
+              <div class="ph"></div>
+              <span class="idx">2 细节</span>
+              <span class="ov">2000×1500</span>
+            </div>
+            <div class="audit-img">
+              <div class="ph"></div>
+              <span class="idx">3 细节</span>
+              <span class="ov">2000×1500</span>
+            </div>
+            <div class="audit-img">
+              <div class="ph"></div>
+              <span class="idx">4 包装</span>
+              <span class="ov">1600×1200</span>
+            </div>
+          </div>
+
+          <div class="notice notice-plain" style="margin-top:16px">
+            <div>
+              <div class="notice-title">图片校验</div>
+              L1 通过 4 / 4（格式、尺寸、清晰度、曝光均达标）；L2 有效 4 / 4（粒数 128~186，遮挡率 8%~22%，图级置信 0.68~0.81 均达标）。
+            </div>
+          </div>
+
+          <div style="margin-top:18px">
+            <div class="between" style="margin-bottom:10px">
+              <span class="small strong">识别汇总</span>
+              <span class="xs muted">4 张有效图合并计算</span>
+            </div>
+            <div class="card flat" style="overflow:hidden">
+              <div class="metric-grid">
+                <div class="metric-cell"><div class="metric-k">总粒数</div><div class="metric-v">612<span class="u">粒</span></div></div>
+                <div class="metric-cell"><div class="metric-k">综合缺陷率</div><div class="metric-v" style="color:var(--danger)">8.4<span class="u">%</span></div></div>
+                <div class="metric-cell"><div class="metric-k">霉变率</div><div class="metric-v" style="color:var(--ok)">0.3<span class="u">%</span></div></div>
+                <div class="metric-cell"><div class="metric-k">坏果率</div><div class="metric-v" style="color:var(--warn)">5.6<span class="u">%</span></div></div>
+                <div class="metric-cell"><div class="metric-k">油果率</div><div class="metric-v">2.5<span class="u">%</span></div></div>
+                <div class="metric-cell"><div class="metric-k">杂质率</div><div class="metric-v">0.4<span class="u">%</span></div></div>
+              </div>
+            </div>
+            <div class="xs muted" style="margin-top:8px;line-height:1.7">
+              粒数为 4 张有效图合并计数的总和，缺陷率按合并计数计算（非各图比率的平均值）。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 右：评估与操作 ==================== -->
+      <div class="audit-col" style="background:#fff">
+
+        <div class="sec">
+          <div class="between" style="margin-bottom:10px">
+            <span class="small strong">AI 外观评估</span>
+            <span class="tag tag-outline">仅外观</span>
+          </div>
+
+          <div class="card flat" style="overflow:hidden;border-color:var(--line)">
+            <div class="metric-grid">
+              <div class="metric-cell"><div class="metric-k">建议等级</div><div class="metric-v">乙级</div></div>
+              <div class="metric-cell"><div class="metric-k">置信度</div><div class="metric-v">0.74</div></div>
+              <div class="metric-cell"><div class="metric-k">相对粒径</div><div class="metric-v">中</div></div>
+            </div>
+          </div>
+
+          <div class="diff-box diff-danger" style="margin-top:12px">
+            <div class="row gap-8" style="margin-bottom:6px">
+              <span class="flag flag-danger" style="font-size:13px">自述高报 2 级</span>
+            </div>
+            <div class="small" style="color:#8f1c1c;line-height:1.7">
+              卖家自述 <b>特级</b>，AI 建议 <b>乙级</b>。综合缺陷率 8.4% 超出特级阈值（2.0%）4 倍以上，
+              建议驳回或改级通过。
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="xs muted" style="margin-bottom:6px">命中规则</div>
+            <div style="font-size:12px;line-height:1.9;color:var(--ink-2)">
+              <div class="between"><span>R4 综合缺陷率 &gt; 5%</span><span class="tag tag-danger" style="height:18px">命中</span></div>
+              <div class="between"><span>R1 霉变率 ≤ 1.5%</span><span class="tag tag-ok" style="height:18px">通过</span></div>
+              <div class="between"><span>R6 杂质率 ≤ 1%</span><span class="tag tag-ok" style="height:18px">通过</span></div>
+            </div>
+          </div>
+
+          <div class="xs muted" style="margin-top:10px">
+            模型 v1.0.0 · 阈值 th-20261001-02 · 评估耗时 9.4s
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-t">审核操作</div>
+          <div class="op-group">
+            <button class="op-btn">通过（按卖家自述特级）<span class="kbd">A</span></button>
+            <button class="op-btn">改级通过 <span class="kbd">E</span></button>
+            <button class="op-btn danger focus" data-open-reject>驳回 <span class="kbd">R</span></button>
+            <button class="op-btn" style="height:36px;font-size:13px">要求补充材料</button>
+            <button class="op-btn" style="height:36px;font-size:13px;color:var(--ink-3)">标记违规并下架</button>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-t">审核备注</div>
+          <textarea class="textarea" rows="3" placeholder="备注会同步给卖家（驳回时必填，至少 10 字）"></textarea>
+          <div class="row gap-8" style="margin-top:8px;flex-wrap:wrap">
+            <span class="chip" style="height:26px;font-size:12px">缺陷率与自述不符</span>
+            <span class="chip" style="height:26px;font-size:12px">请补充细节图</span>
+          </div>
+        </div>
+
+        <div class="sec" style="background:var(--bg-2)">
+          <div class="row gap-8" style="flex-wrap:wrap">
+            <span class="kbd">A</span><span class="xs muted">通过</span>
+            <span class="kbd">E</span><span class="xs muted">改级</span>
+            <span class="kbd">R</span><span class="xs muted">驳回</span>
+            <span class="kbd">→</span><span class="xs muted">下一条</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- 驳回弹层 -->
+<div class="mask" data-reject-mask hidden>
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-t">驳回商品</div>
+      <div class="modal-sub">中宁宁杞5号 特级 280粒/50g · GQ-20261026-0231</div>
+    </div>
+    <div class="modal-bd">
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">驳回原因<span class="req">*</span></label>
+        <div class="pick-list">
+          <span class="pick active">R04 自述等级偏高</span>
+          <span class="pick">R01 图片模糊</span>
+          <span class="pick">R02 非实拍图</span>
+          <span class="pick">R05 描述不符</span>
+          <span class="pick">R06 价格异常</span>
+          <span class="pick">R03 图片不足</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">补充说明<span class="req">*</span></label>
+        <textarea class="textarea" rows="3">综合缺陷率 8.4%，超出特级上限较多，建议按乙级重新发布，或补充更清晰的细节图后重提。</textarea>
+        <div class="hint">至少 10 字，卖家可在"我的商品"看到这条说明。</div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" data-close-reject>取消</button>
+      <button class="btn btn-danger" data-close-reject>确认驳回</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

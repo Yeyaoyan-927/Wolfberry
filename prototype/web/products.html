@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>货源列表 · 杞市</title>
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+  .list-layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 24px; }
+
+  .filter-panel { position: sticky; top: 84px; align-self: start; }
+  .filter-panel .card-pad { padding: 4px 18px 8px; }
+
+  .toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 0 14px; gap: 16px;
+  }
+  .sortbar { display: flex; align-items: center; gap: 2px; }
+  .sortbar button {
+    height: 30px; padding: 0 11px; border: 0; background: none;
+    border-radius: var(--r-xs); font: inherit; font-size: 13px;
+    color: var(--ink-2); cursor: pointer;
+  }
+  .sortbar button:hover { background: var(--bg); }
+  .sortbar button.active { color: var(--brand); font-weight: 500; background: var(--brand-soft); }
+
+  .prow {
+    display: grid;
+    grid-template-columns: 176px minmax(0, 1fr) 200px;
+    gap: 20px;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    margin-bottom: 12px;
+    transition: border-color .18s var(--ease), box-shadow .18s var(--ease);
+  }
+  .prow:hover { border-color: #d6d9de; box-shadow: var(--sh-2); }
+
+  .prow-img {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--r);
+    background:
+      radial-gradient(circle at 30% 25%, #e8d7cf 0%, transparent 45%),
+      linear-gradient(150deg, #f6ede8, #ede0d8);
+    display: grid; place-items: center;
+    overflow: hidden;
+  }
+  .prow-img::after {
+    content: "";
+    width: 46%; height: 46%;
+    border-radius: 999px;
+    background: radial-gradient(circle at 35% 30%, #E8684F 0%, #C22F27 55%, #8E1D18 100%);
+    box-shadow: 16px 7px 0 -4px #D2523C, -14px 9px 0 -5px #A8261E, 2px 18px 0 -6px #DC6448;
+    opacity: .92;
+  }
+  .prow-img .badges { position: absolute; left: 8px; top: 8px; display: flex; gap: 5px; }
+
+  .prow-title { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.45; }
+  .prow-title:hover { color: var(--brand); }
+  .prow-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--ink-3); }
+  .prow-meta .kv { display: inline-flex; gap: 4px; }
+  .prow-meta .kv b { font-weight: 500; color: var(--ink-2); }
+
+  .metric-strip {
+    display: flex; gap: 0; margin-top: 12px;
+    border: 1px solid var(--line-2); border-radius: var(--r-sm);
+    background: var(--bg-2); overflow: hidden;
+  }
+  .ms { flex: 1; padding: 8px 12px; border-right: 1px solid var(--line-2); }
+  .ms:last-child { border-right: 0; }
+  .ms-k { font-size: 10.5px; color: var(--ink-3); letter-spacing: .02em; }
+  .ms-v { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 1px; }
+
+  .prow-side {
+    border-left: 1px solid var(--line-2);
+    padding-left: 20px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    align-items: flex-end;
+    text-align: right;
+  }
+  .seller-line { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); }
+
+  .pager { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 28px 0 0; }
+  .pager a, .pager span {
+    min-width: 32px; height: 32px; padding: 0 8px;
+    display: grid; place-items: center;
+    border: 1px solid var(--line); border-radius: var(--r-sm);
+    background: #fff; font-size: 13px; color: var(--ink-2);
+  }
+  .pager .cur { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 500; }
+  .pager .dots { border: 0; background: none; }
+
+  .applied { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .applied-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 26px; padding: 0 6px 0 10px;
+    border-radius: var(--r-xs);
+    background: var(--brand-soft); border: 1px solid var(--brand-line);
+    color: var(--brand-dark); font-size: 12px;
+  }
+  .applied-chip i { font-style: normal; opacity: .6; cursor: pointer; padding: 0 3px; }
+
+  .range { display: flex; align-items: center; gap: 6px; }
+  .range .input { height: 30px; font-size: 12px; padding: 0 8px; }
+
+  @media (max-width: 1080px) {
+    .list-layout { grid-template-columns: 1fr; }
+    .filter-panel { position: static; }
+    .prow { grid-template-columns: 140px minmax(0, 1fr); }
+    .prow-side { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line-2); padding: 12px 0 0; flex-direction: row; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="logo" href="home.html"><span class="logo-mark">杞</span>杞市</a>
+    <nav class="nav">
+      <a href="home.html">首页</a>
+      <a class="active" href="products.html">货源</a>
+      <a href="products.html">行情</a>
+      <a href="chat.html">智能问答</a>
+    </nav>
+    <div class="topsearch">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#aab1ba" stroke-width="1.4"/><path d="M10.6 10.6L14 14" stroke="#aab1ba" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <input value="宁杞5号">
+    </div>
+    <div class="topbar-actions">
+      <a class="btn btn-ghost btn-sm" href="orders.html">我的订单</a>
+      <a class="btn btn-primary btn-sm" href="seller-publish.html">发布货源</a>
+      <div class="avatar">中</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap page">
+
+  <div class="crumb" style="margin-bottom:16px">
+    <a href="home.html">首页</a>
+    <span class="sep">/</span>
+    <span class="cur">枸杞货源</span>
+  </div>
+
+  <div class="between" style="margin-bottom:20px;align-items:flex-end">
+    <div>
+      <h1 style="font-size:24px;font-weight:650;letter-spacing:-0.03em">枸杞货源</h1>
+      <div class="small muted" style="margin-top:4px">共 3,286 件在架 · 其中 3,162 件已通过 AI 外观评估</div>
+    </div>
+    <div class="segmented" data-toggle-group="view">
+      <button class="active" data-toggle="list">列表</button>
+      <button data-toggle="grid">卡片</button>
+    </div>
+  </div>
+
+  <div class="list-layout">
+
+    <!-- ============ 筛选 ============ -->
+    <aside class="filter-panel">
+      <div class="card">
+        <div class="card-pad">
+
+          <div class="filter-group">
+            <div class="filter-title">品种</div>
+            <div class="filter-opts">
+              <span class="filter-opt active">全部</span>
+              <span class="filter-opt">宁杞1号</span>
+              <span class="filter-opt">宁杞5号</span>
+              <span class="filter-opt">宁杞7号</span>
+              <span class="filter-opt">大麻叶</span>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-title">平台等级</div>
+            <div class="filter-opts">
+              <span class="filter-opt">特优</span>
+              <span class="filter-opt active">特级</span>
+              <span class="filter-opt">甲级</span>
+              <span class="filter-opt">乙级</span>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-title">产区</div>
+            <div class="filter-opts">
+              <span class="filter-opt">全部</span>
+              <span class="filter-opt active">宁夏中宁</span>
+              <span class="filter-opt">青海诺木洪</span>
+              <span class="filter-opt">新疆精河</span>
+              <span class="filter-opt">甘肃靖远</span>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-title">规格（粒 / 50g）</div>
+            <div class="filter-opts">
+              <span class="filter-opt">180</span>
+              <span class="filter-opt">220</span>
+              <span class="filter-opt active">280</span>
+              <span class="filter-opt">380</span>
+              <span class="filter-opt">500</span>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-title">价格区间（元/kg）</div>
+            <div class="range">
+              <input class="input" placeholder="最低">
+              <span class="muted">—</span>
+              <input class="input" placeholder="最高">
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-title">其他</div>
+            <label class="check" style="margin-bottom:8px"><input type="checkbox" checked> 仅看有 AI 评估</label><br>
+            <label class="check" style="margin-bottom:8px"><input type="checkbox"> 附第三方检测报告</label><br>
+            <label class="check"><input type="checkbox"> 支持样品寄送</label>
+          </div>
+
+          <div style="display:flex;gap:8px;padding-top:14px">
+            <button class="btn btn-primary btn-block">应用筛选</button>
+            <button class="btn btn-ghost">重置</button>
+          </div>
+
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============ 列表 ============ -->
+    <main>
+
+      <div class="applied">
+        <span class="small muted">已选：</span>
+        <span class="applied-chip">特级 <i>×</i></span>
+        <span class="applied-chip">宁夏中宁 <i>×</i></span>
+        <span class="applied-chip">280 粒/50g <i>×</i></span>
+        <a href="#" class="small" style="color:var(--brand-dark)">清空</a>
+      </div>
+
+      <div class="toolbar">
+        <div class="sortbar">
+          <button class="active">综合</button>
+          <button>最新上架</button>
+          <button>价格 ↑</button>
+          <button>价格 ↓</button>
+          <button>缺陷率 ↑</button>
+        </div>
+        <span class="small muted">1–20 / 共 486 件</span>
+      </div>
+
+      <!-- 行 1 -->
+      <a class="prow" href="product-detail.html">
+        <div class="prow-img">
+          <div class="badges"><span class="grade grade-b">特级</span></div>
+        </div>
+        <div>
+          <div class="prow-title">中宁宁杞5号 特级 280粒/50g 2026 新货 产地直发</div>
+          <div class="prow-meta">
+            <span class="kv">产区 <b>宁夏中宁</b></span>
+            <span class="kv">品种 <b>宁杞5号</b></span>
+            <span class="kv">规格 <b>280 粒/50g</b></span>
+            <span class="kv">含水率 <b>12.4%</b></span>
+          </div>
+          <div class="metric-strip">
+            <div class="ms"><div class="ms-k">缺陷率</div><div class="ms-v" style="color:var(--ok)">2.1%</div></div>
+            <div class="ms"><div class="ms-k">霉变率</div><div class="ms-v" style="color:var(--ok)">0.1%</div></div>
+            <div class="ms"><div class="ms-k">油果率</div><div class="ms-v">0.6%</div></div>
+            <div class="ms"><div class="ms-k">识别粒数</div><div class="ms-v">742</div></div>
+            <div class="ms"><div class="ms-k">相对粒径</div><div class="ms-v">中偏大</div></div>
+          </div>
+        </div>
+        <div class="prow-side">
+          <div>
+            <div class="price num" style="font-size:22px">¥46.20<span class="unit">/kg</span></div>
+            <div class="xs muted" style="margin-top:2px">50kg 起订 · 库存 1.2t</div>
+          </div>
+          <div style="margin-top:14px">
+            <div class="seller-line"><span class="tag tag-outline" style="height:20px">企业</span> 中宁杞源合作社</div>
+            <div class="seller-line" style="margin-top:5px">
+              <span class="tag tag-ok" style="height:20px">已审核</span>
+              <span>评分 4.8</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- 行 2 -->
+      <a class="prow" href="product-detail.html">
+        <div class="prow-img">
+          <div class="badges"><span class="grade grade-b">特级</span><span class="tag tag-info" style="height:20px">检测报告</span></div>
+        </div>
+        <div>
+          <div class="prow-title">中宁大麻叶优系 特级 280粒 颗粒均匀 色深</div>
+          <div class="prow-meta">
+            <span class="kv">产区 <b>宁夏中宁</b></span>
+            <span class="kv">品种 <b>大麻叶</b></span>
+            <span class="kv">规格 <b>280 粒/50g</b></span>
+            <span class="kv">含水率 <b>11.8%</b></span>
+          </div>
+          <div class="metric-strip">
+            <div class="ms"><div class="ms-k">缺陷率</div><div class="ms-v" style="color:var(--ok)">1.6%</div></div>
+            <div class="ms"><div class="ms-k">霉变率</div><div class="ms-v" style="color:var(--ok)">0.0%</div></div>
+            <div class="ms"><div class="ms-k">油果率</div><div class="ms-v">0.9%</div></div>
+            <div class="ms"><div class="ms-k">识别粒数</div><div class="ms-v">1,038</div></div>
+            <div class="ms"><div class="ms-k">相对粒径</div><div class="ms-v">大</div></div>
+          </div>
+        </div>
+        <div class="prow-side">
+          <div>
+            <div class="price num" style="font-size:22px">¥58.00<span class="unit">/kg</span></div>
+            <div class="xs muted" style="margin-top:2px">100kg 起订 · 库存 0.6t</div>
+          </div>
+          <div style="margin-top:14px">
+            <div class="seller-line"><span class="tag tag-outline" style="height:20px">合作社</span> 中宁红宝枸杞</div>
+            <div class="seller-line" style="margin-top:5px">
+              <span class="tag tag-ok" style="height:20px">已审核</span>
+              <span>评分 4.9</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- 行 3 -->
+      <a class="prow" href="product-detail.html">
+        <div class="prow-img">
+          <div class="badges"><span class="grade grade-b">特级</span></div>
+        </div>
+        <div>
+          <div class="prow-title">中宁宁杞1号 特级 280粒 传统晾晒 有轻微油果</div>
+          <div class="prow-meta">
+            <span class="kv">产区 <b>宁夏中宁</b></span>
+            <span class="kv">品种 <b>宁杞1号</b></span>
+            <span class="kv">规格 <b>280 粒/50g</b></span>
+            <span class="kv">含水率 <b>13.1%</b></span>
+          </div>
+          <div class="metric-strip">
+            <div class="ms"><div class="ms-k">缺陷率</div><div class="ms-v" style="color:var(--warn)">4.8%</div></div>
+            <div class="ms"><div class="ms-k">霉变率</div><div class="ms-v" style="color:var(--ok)">0.2%</div></div>
+            <div class="ms"><div class="ms-k">油果率</div><div class="ms-v" style="color:var(--warn)">3.4%</div></div>
+            <div class="ms"><div class="ms-k">识别粒数</div><div class="ms-v">684</div></div>
+            <div class="ms"><div class="ms-k">相对粒径</div><div class="ms-v">中</div></div>
+          </div>
+        </div>
+        <div class="prow-side">
+          <div>
+            <div class="price num" style="font-size:22px">¥38.60<span class="unit">/kg</span></div>
+            <div class="xs muted" style="margin-top:2px">50kg 起订 · 库存 3t</div>
+          </div>
+          <div style="margin-top:14px">
+            <div class="seller-line"><span class="tag tag-outline" style="height:20px">个人</span> 王记枸杞</div>
+            <div class="seller-line" style="margin-top:5px">
+              <span class="tag tag-warn" style="height:20px">评估偏低置信</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- 行 4 -->
+      <a class="prow" href="product-detail.html">
+        <div class="prow-img">
+          <div class="badges"><span class="grade grade-b">特级</span></div>
+        </div>
+        <div>
+          <div class="prow-title">中宁宁杞5号 特级 280粒 大货可长期供</div>
+          <div class="prow-meta">
+            <span class="kv">产区 <b>宁夏中宁</b></span>
+            <span class="kv">品种 <b>宁杞5号</b></span>
+            <span class="kv">规格 <b>280 粒/50g</b></span>
+            <span class="kv">含水率 <b>12.0%</b></span>
+          </div>
+          <div class="metric-strip">
+            <div class="ms"><div class="ms-k">缺陷率</div><div class="ms-v" style="color:var(--ok)">1.9%</div></div>
+            <div class="ms"><div class="ms-k">霉变率</div><div class="ms-v" style="color:var(--ok)">0.1%</div></div>
+            <div class="ms"><div class="ms-k">油果率</div><div class="ms-v">0.5%</div></div>
+            <div class="ms"><div class="ms-k">识别粒数</div><div class="ms-v">1,246</div></div>
+            <div class="ms"><div class="ms-k">相对粒径</div><div class="ms-v">中偏大</div></div>
+          </div>
+        </div>
+        <div class="prow-side">
+          <div>
+            <div class="price num" style="font-size:22px">¥44.80<span class="unit">/kg</span></div>
+            <div class="xs muted" style="margin-top:2px">500kg 起订 · 库存 20t</div>
+          </div>
+          <div style="margin-top:14px">
+            <div class="seller-line"><span class="tag tag-outline" style="height:20px">企业</span> 宁夏中宁枸杞集团</div>
+            <div class="seller-line" style="margin-top:5px">
+              <span class="tag tag-ok" style="height:20px">已审核</span>
+              <span>评分 4.7</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <div class="pager">
+        <span>上一页</span>
+        <span class="cur">1</span>
+        <a href="#">2</a>
+        <a href="#">3</a>
+        <a href="#">4</a>
+        <span class="dots">…</span>
+        <a href="#">25</a>
+        <a href="#">下一页</a>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

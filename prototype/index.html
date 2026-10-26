@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>杞市 · 页面原型总览</title>
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .hero {
+    padding: 56px 0 36px;
+    border-bottom: 1px solid var(--line);
+    background:/n      radial-gradient(circle at 96% -14%, rgba(194,47,39,.08), rgba(194,47,39,.022) 34%, transparent 54%),
+      #fff;
+  }
+  .hero h1 { font-size: 32px; line-height: 1.25; letter-spacing: -0.03em; font-weight: 700; }
+  .hero p { margin-top: 12px; color: var(--ink-2); font-size: 15px; max-width: 62ch; line-height: 1.7; }
+  .hero-meta { display: flex; gap: 28px; margin-top: 26px; flex-wrap: wrap; }
+  .hero-meta div { font-size: 13px; color: var(--ink-3); }
+  .hero-meta b { display: block; font-size: 20px; color: var(--ink); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 2px; }
+
+  .sect { padding: 40px 0 8px; }
+  .sect-hd { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
+  .sect-hd h2 { font-size: 18px; font-weight: 650; letter-spacing: -0.02em; }
+  .sect-hd span { font-size: 13px; color: var(--ink-3); }
+
+  .pg-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .pg {
+    display: block;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    transition: border-color .18s var(--ease), box-shadow .18s var(--ease), transform .18s var(--ease);
+  }
+  .pg:hover { border-color: #d6d9de; box-shadow: var(--sh-2); transform: translateY(-2px); }
+  .pg-thumb { height: 120px; border-bottom: 1px solid var(--line-2); position: relative; background: var(--bg-2); overflow: hidden; }
+  .pg-thumb i { position: absolute; display: block; background: #fff; border: 1px solid var(--line); border-radius: 3px; }
+  .pg-body { padding: 14px 16px 16px; }
+  .pg-no { font-size: 11px; color: var(--ink-4); letter-spacing: .06em; font-weight: 600; }
+  .pg-name { font-size: 15px; font-weight: 600; margin-top: 2px; letter-spacing: -0.01em; }
+  .pg-desc { font-size: 12.5px; color: var(--ink-3); margin-top: 6px; line-height: 1.6; min-height: 38px; }
+  .pg-tags { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+
+  .note { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; }
+  .note .card { padding: 20px; }
+  .note h3 { font-size: 14px; margin-bottom: 10px; }
+  .note li { font-size: 13px; color: var(--ink-2); line-height: 1.8; padding-left: 14px; position: relative; }
+  .note li::before { content: ""; position: absolute; left: 0; top: 11px; width: 5px; height: 5px; border-radius: 999px; background: var(--brand); opacity: .55; }
+
+  @media (max-width: 980px) { .pg-grid { grid-template-columns: repeat(2, 1fr); } .note { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="row gap-8" style="margin-bottom:18px">
+      <span class="logo"><span class="logo-mark">杞</span>杞市 · Goji Market</span>
+      <span class="tag tag-outline">设计原型 v1.0</span>
+    </div>
+    <h1>交易端 + 后台端，11 个核心页面</h1>
+    <p>依据《枸杞交易平台需求文档 v4.0》绘制。重点看三处：商品详情页的「AI 外观评估卡」、后台的「审核工作台」、卖家发布时的「等级差异提示」——这三个界面承载了平台防"图文不符"的核心机制。</p>
+    <div class="hero-meta">
+      <div><b>2</b>端</div>
+      <div><b>11</b>页面</div>
+      <div><b>5</b>级外观等级</div>
+      <div><b>1</b>套设计令牌</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="sect">
+    <div class="sect-hd"><h2>交易端</h2><span>买家 / 卖家共用，按角色显示功能</span></div>
+    <div class="pg-grid">
+
+      <a class="pg" href="web/home.html">
+        <div class="pg-thumb">
+          <i style="left:12px;top:10px;right:12px;height:14px"></i>
+          <i style="left:12px;top:32px;width:120px;height:8px;border:0;background:#e9ebee"></i>
+          <i style="left:12px;top:46px;width:100px;height:8px;border:0;background:#e9ebee"></i>
+          <i style="left:12px;top:64px;width:46%;height:44px"></i>
+          <i style="right:12px;top:64px;width:36%;height:44px;background:#fbf1ef;border-color:#F3D3CB"></i>
+        </div>
+        <div class="pg-body">
+          <div class="pg-no">WEB-01</div>
+          <div class="pg-name">首页</div>
+          <div class="pg-desc">搜索入口、今日行情、产区分类、推荐货源</div>
+          <div class="pg-tags"><span class="tag tag-plain">搜索</span><span class="tag tag-plain">行情卡</span></div>
+        </div>
+      </a>
+
+      <a class="pg" href="web/products.html">
+        <div class="pg-thumb">
+          <i style="left:12px;top:10px;width:64px;bottom:12px;background:#fafbfc"></i>
+          <i style="left:86px;top:10px;width:60px;height:46px"></i>
+          <i style="left:152px;top:10px;width:60px;height:46px"></i>
+          <i style="left:218px;top:10px;width:60px;height:46px"></i>
+          <i style="left:86px;top:62px;width:60px;height:46px"></i>
+          <i style="left:152px;top:62px;width:60px;height:46px"></i>
+        </div>
+        <div class="pg-body">
+          <div class="pg-no">WEB-02</div>
+          <div class="pg-name">货源列表</div>
+          <div class="pg-desc">8 项筛选 + 4 种排序（含"缺陷率升序"）</div>
+          <div class="pg-tags"><span class="tag tag-plain">筛选</span><span class="tag tag-plain">排序</span></div>
+        </div>
+      </a>
+
+      <a class="pg" href="web/product-detail.html">
+        <div class="pg-thumb">
+          <i style="left:12px;top:10px;width:48%;height:96px"></i>
+          <i style="right:12px;top:10px;width:44%;height:22px;background:#fbf1ef;border-color:#F3D3CB"></i>
+          <i style="right:12px;top:38px;width:44%;height:30px;background:#fbf1ef;border-color:#F3D3CB"></i>
+          <i style="right:12px;top:74px;width:44%;height:32px"></i>
+        </div>
+        <div class="pg-body">
+          <div class="pg-no">WEB-03</div>
+          <div class="pg-name">商品详情 <span class="tag tag-brand" style="margin-left:4px">重点</span></div>
+          <div class="pg-desc">实拍图/标注图切换、AI 评估卡、下单区</div>
+          <div class="pg-tags"><span class="tag tag-plain">AI 评估卡</span><span class="tag tag-plain">图文一致</span></div>
+        </div>
+      </a>
+
+      <a class="pg" href="web/seller-publish.html">
+        <div class="pg-thumb">
+          <i style="left:12px;top:8px;width:180px;height:10px;border:0;background:#e9ebee"></i>
+          <i style="left:12px;top:28px;width:56%;height:78px"></i>
+          <i style="right:12px;top:28px;width:34%;height:78px;background:#fbf1ef;border-color:#F3D3CB"></i>
+        </div>
+        <div class="pg-body">
+          <div class="pg-no">WEB-04</div>
+          <div class="pg-name">发布商品 <span class="tag tag-brand" style="margin-left:4px">重点</span></div>
+          <div class="pg-desc">5 步表单、图片 L1 校验、自述等级与 AI 差异预警</div>
+          <div class="pg-tags"><span class="tag tag-plain">上传门禁</span><span class="tag tag-plain">等级预警</span></div>
+        </div>
+      </a>
+
+      <a class="pg" href="web/orders.html">
+        <div class="pg-thumb">
+          <i style="left:12px;top:10px;right:12px;height:12px;border:0;background:#e9ebee"></i>
+          <i style="left:12px;top:30px;right:12px;height:26px"></i>
+          <i style="left:12px;top:60px;right:12px;height:26px"></i>
+          <i style="left:12px;top:90px;right:12px;height:26px"></i>
+        </div>
+        <div class="pg-body">
+          <div class="pg-no">WEB-05</div>
+          <div class="pg-name">我的订单</div>
+          <div class="pg-desc">状态 Tab、订单卡、时间线、售后入口</div>
+          <div class="pg-tags"><span class="tag tag-plain">履约</span><span class="tag tag-plain">售后</span></div>
+        </div>
+      </a>
+
+      <a class="pg" href="web/chat.html">
+        <div class="pg-thumb">
+          <i style="left:12px;top:10px;width:52px;bottom:10px;background:#fafbfc"></i>
+          <i style="left:74px;top:12px;width:58%;height:30px"></i>
+          <i style="left:96px;top:48px;width:52%;height:40px;background:#fbf1ef;border-color:#F3D3CB"></i>
+          <i style="right:10px;top:10px;width:56px;bottom:10px;background:#fafbfc"></i>
+        </div>
+        <div class="pg-body">
+          <div class="pg-no">WEB-06</div>
+          <div class="pg-name">智能问答</div>
+          <div class="pg-desc">流式回答、引用角标、原文溯源面板</div>
+          <div class="pg-tags"><span class="tag tag-plain">RAG</span><span class="tag tag-plain">引用</span></div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="sect">
+    <div class="sect-hd"><h2>后台管理端</h2><span>审核员 / 运营 / 系统管理员</span></div>
+    <div class="pg-grid">
+
+      <a class="pg" href="admin/dashboard.html">
+        <div class="pg-thumb">
+          <i style="left:12px;top:10px;width:40px;bottom:10px;background:#fafbfc"></i>
+          <i style="left:60px;top:10px;width:30%;height:34px"></i>
+          <i style="left:60px;top:50px;width:30%;height:34px"></i>
+          <i style="left:12px;bottom:8px;width:0;height:0"></i>
+          <i style="right:12px;top:10px;width:34%;height:74px"></i>
+        </div>
+        <div class="pg-body">
+          <div class="pg-no">ADM-01</div>
+          <div class="pg-name">运营看板</div>
+          <div class="pg-desc">GMV、待审核积压、成交趋势、等级分布</div>
+          <div class="pg-tags"><span class="tag tag-plain">指标</span></div>
+        </div>
+      </a>
+
+      <a class="pg" href="admin/audit.html">
+        <div class="pg-thumb">
+          <i style="left:12px;top:10px;width:26%;bottom:10px;background:#fafbfc"></i>
+          <i style="left:34%;top:10px;width:32%;height:46px"></i>
+          <i style="left:34%;top:62px;width:32%;height:34px"></i>
+          <i style="right:12px;top:10px;width:28%;bottom:10px;background:#fdf2f1;border-color:#f2c7c7"></i>
+        </div>
+        <div class="pg-body">
+          <div class="pg-no">ADM-02</div>
+          <div class="pg-name">审核工作台 <span class="tag tag-brand" style="margin-left:4px">核心</span></div>
+          <div class="pg-desc">三栏布局、等级差异红标、四种审核动作、快捷键</div>
+          <div class="pg-tags"><span class="tag tag-plain">三栏</span><span class="tag tag-plain">差异判定</span></div>
+        </div>
+      </a>
+
+      <a class="pg" href="admin/products.html">
+        <div class="pg-thumb">
+          <i style="left:12px;top:10px;right:12px;height:14px;border:0;background:#e9ebee"></i>
+          <i style="left:12px;top:30px;right:12px;height:18px"></i>
+          <i style="left:12px;top:52px;right:12px;height:18px"></i>
+          <i style="left:12px;top:74px;right:12px;height:18px"></i>
+        </div>
+        <div class="pg-body">
+          <div class="pg-no">ADM-03</div>
+          <div class="pg-name">商品管理 <span class="tag tag-outline" style="margin-left:4px;height:18px">左树右表</span></div>
+          <div class="pg-desc">左侧状态/产区/品种三级树，右侧表格三等级并列</div>
+          <div class="pg-tags"><span class="tag tag-plain">树形筛选</span><span class="tag tag-plain">差异标记</span></div>
+        </div>
+      </a>
+
+      <a class="pg" href="admin/kb.html">
+        <div class="pg-thumb">
+          <i style="left:12px;top:10px;width:52px;bottom:10px;background:#fafbfc"></i>
+          <i style="left:74px;top:10px;right:12px;height:20px"></i>
+          <i style="left:74px;top:36px;right:12px;height:20px"></i>
+          <i style="left:74px;top:62px;right:12px;height:20px"></i>
+        </div>
+        <div class="pg-body">
+          <div class="pg-no">ADM-04</div>
+          <div class="pg-name">知识库管理 <span class="tag tag-outline" style="margin-left:4px;height:18px">左树右表</span></div>
+          <div class="pg-desc">左侧知识分类树，右侧文档表与入库状态</div>
+          <div class="pg-tags"><span class="tag tag-plain">树形分类</span><span class="tag tag-plain">RAG 运维</span></div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <div class="note">
+    <div class="card">
+      <h3>这套原型故意没做的</h3>
+      <ul>
+        <li>没有做登录页——流程简单，评审时看价值页更重要</li>
+        <li>没有做支付、物流轨迹页面——需求已明确排除</li>
+        <li>没有拉真实图片，用色块占位，落地时替换为实拍图</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>落地到 Vue 3 的映射</h3>
+      <ul>
+        <li><code>assets/app.css</code> 的令牌映射为 Element Plus 主题变量</li>
+        <li>每个 <code>.card</code> 对应一个 <code>&lt;el-card&gt;</code> 或自定义容器</li>
+        <li>审核三栏用 CSS Grid，不用 flex 百分比计算</li>
+        <li>等级/差异标记封装为 <code>&lt;GradeTag&gt;</code> <code>&lt;DiffFlag&gt;</code> 两个组件</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="height:48px"></div>
+</div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

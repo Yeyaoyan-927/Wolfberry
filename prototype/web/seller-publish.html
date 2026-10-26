@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>发布货源 · 杞市卖家中心</title>
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+  .pub-layout { display: grid; grid-template-columns: minmax(0, 1fr) 336px; gap: 24px; align-items: start; }
+
+  .steps-bar {
+    background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg);
+    padding: 20px 24px; margin-bottom: 20px;
+  }
+
+  .form-sect { padding: 4px 0 0; }
+  .form-sect + .form-sect { border-top: 1px solid var(--line-2); margin-top: 22px; padding-top: 22px; }
+  .form-sect-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .form-sect-desc { font-size: 12px; color: var(--ink-3); margin-bottom: 16px; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .field-row.one { grid-template-columns: 1fr; }
+
+  /* 上传项 */
+  .up-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .up-item {
+    position: relative; aspect-ratio: 1;
+    border-radius: var(--r); overflow: hidden;
+    border: 1px solid var(--line);
+    background: linear-gradient(150deg, #f7efea, #ece0d8);
+  }
+  .up-item::after {
+    content: ""; position: absolute; inset: 0; margin: auto;
+    width: 44%; height: 44%; border-radius: 999px;
+    background: radial-gradient(circle at 35% 30%, #E8684F, #C22F27 55%, #8E1D18);
+    box-shadow: 12px 5px 0 -4px #D2523C, -11px 7px 0 -5px #A8261E;
+  }
+  .up-item.error { border: 2px solid var(--danger-line); box-shadow: 0 0 0 3px rgba(189,38,38,.08); }
+  .up-item.error::before {
+    content: ""; position: absolute; inset: 0;
+    background: rgba(189,38,38,.13); z-index: 2;
+  }
+  .up-tag { position: absolute; left: 7px; top: 7px; z-index: 3; height: 20px; font-size: 11px; }
+  .up-del {
+    position: absolute; right: 6px; top: 6px; z-index: 4;
+    width: 20px; height: 20px; border-radius: 999px;
+    background: rgba(23,25,29,.55); color: #fff;
+    display: grid; place-items: center; font-size: 12px; cursor: pointer;
+    border: 0; line-height: 1;
+  }
+  .up-main {
+    position: absolute; left: 7px; bottom: 7px; z-index: 3;
+    height: 20px; padding: 0 7px; border-radius: var(--r-xs);
+    background: rgba(255,255,255,.94); font-size: 11px; color: var(--ink-2);
+    display: flex; align-items: center; gap: 3px; border: 1px solid var(--line);
+  }
+  .up-add {
+    aspect-ratio: 1; border: 1px dashed #d6d9de; border-radius: var(--r);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    background: var(--bg-2); color: var(--ink-3); font-size: 12px; cursor: pointer;
+    transition: all .16s var(--ease);
+  }
+  .up-add:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
+
+  /* 自述等级 */
+  .grade-pick { display: flex; gap: 8px; flex-wrap: wrap; }
+  .grade-opt {
+    padding: 9px 14px; border-radius: var(--r-sm);
+    border: 1px solid var(--line); background: #fff;
+    font-size: 13px; cursor: pointer; transition: all .16s var(--ease);
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .grade-opt small { font-size: 11px; color: var(--ink-3); }
+  .grade-opt:hover { border-color: #d6d9de; }
+  .grade-opt.active { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-dark); }
+  .grade-opt.active small { color: var(--brand-dark); opacity: .75; }
+
+  /* 右侧预览 */
+  .preview-card { position: sticky; top: 84px; }
+  .pv-product {
+    border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden;
+  }
+  .pv-img {
+    aspect-ratio: 4/3; position: relative;
+    background: radial-gradient(circle at 30% 25%, #e8d7cf 0%, transparent 45%), linear-gradient(150deg, #f6ede8, #ede0d8);
+    display: grid; place-items: center;
+  }
+  .pv-img::after {
+    content: ""; width: 46%; height: 46%; border-radius: 999px;
+    background: radial-gradient(circle at 35% 30%, #E8684F, #C22F27 55%, #8E1D18);
+    box-shadow: 16px 7px 0 -4px #D2523C, -14px 9px 0 -5px #A8261E;
+  }
+  .pv-badge { position: absolute; left: 10px; top: 10px; z-index: 2; }
+  .pv-body { padding: 14px; }
+  .pv-title { font-size: 14px; font-weight: 500; line-height: 1.45; }
+  .pv-price { font-size: 20px; font-weight: 700; color: var(--brand); letter-spacing: -.02em; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .pv-metrics { display: grid; grid-template-columns: repeat(3,1fr); border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--bg-2); margin-top: 10px; overflow: hidden; }
+  .pv-m { padding: 7px 8px; text-align: center; border-right: 1px solid var(--line-2); }
+  .pv-m:last-child { border-right: 0; }
+  .pv-m .k { font-size: 10px; color: var(--ink-3); }
+  .pv-m .v { font-size: 12.5px; font-weight: 600; }
+
+  .actionbar {
+    position: sticky; bottom: 0; z-index: 20;
+    margin-top: 24px; padding: 14px 20px;
+    background: rgba(255,255,255,.94); backdrop-filter: blur(10px);
+    border: 1px solid var(--line); border-radius: var(--r-lg);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    box-shadow: var(--sh-2);
+  }
+
+  @media (max-width: 1080px) {
+    .pub-layout { grid-template-columns: 1fr; }
+    .preview-card { position: static; }
+    .field-row { grid-template-columns: 1fr; }
+    .up-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="logo" href="home.html"><span class="logo-mark">杞</span>杞市</a>
+    <nav class="nav">
+      <a href="home.html">首页</a>
+      <a href="products.html">货源</a>
+      <a href="products.html">行情</a>
+      <a href="chat.html">智能问答</a>
+    </nav>
+    <div class="topsearch">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#aab1ba" stroke-width="1.4"/><path d="M10.6 10.6L14 14" stroke="#aab1ba" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <input placeholder="搜品种、产区、规格">
+    </div>
+    <div class="topbar-actions">
+      <a class="btn btn-ghost btn-sm" href="orders.html">我的订单</a>
+      <a class="btn btn-primary btn-sm" href="seller-publish.html">发布货源</a>
+      <div class="avatar">中</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap page">
+
+  <div class="between" style="margin-bottom:18px;align-items:flex-end">
+    <div>
+      <h1 style="font-size:22px;font-weight:650;letter-spacing:-0.025em">发布货源</h1>
+      <div class="small muted" style="margin-top:4px">提交后 4 小时内完成审核（工作时段 9:00–18:00）</div>
+    </div>
+    <a class="btn btn-ghost btn-sm" href="#">保存草稿并退出</a>
+  </div>
+
+  <!-- 步骤条 -->
+  <div class="steps-bar">
+    <div class="steps">
+      <div class="step done">
+        <span class="step-no"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6.3l2.5 2.5L10 3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="step-label">基本信息</span>
+      </div>
+      <span class="step-line"></span>
+      <div class="step done">
+        <span class="step-no"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6.3l2.5 2.5L10 3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="step-label">交易信息</span>
+      </div>
+      <span class="step-line"></span>
+      <div class="step active">
+        <span class="step-no">3</span><span class="step-label">上传图片</span>
+      </div>
+      <span class="step-line"></span>
+      <div class="step">
+        <span class="step-no">4</span><span class="step-label">描述与资质</span>
+      </div>
+      <span class="step-line"></span>
+      <div class="step">
+        <span class="step-no">5</span><span class="step-label">预览提交</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="pub-layout">
+
+    <!-- ============ 左：表单 ============ -->
+    <div>
+      <div class="card card-pad">
+
+        <div class="form-sect">
+          <div class="form-sect-title">实拍图 <span class="tag tag-brand" style="margin-left:6px;height:20px">至少 3 张</span></div>
+          <div class="form-sect-desc">
+            平台要求 3~8 张原始照片：至少 1 张全貌、2 张细节。请勿使用截图、网络图或修图，系统会做重复比对。
+          </div>
+
+          <div class="up-grid">
+            <div class="up-item">
+              <span class="tag tag-ok up-tag">全貌图</span>
+              <span class="up-main">IMG_2041.jpg</span>
+            </div>
+            <div class="up-item">
+              <span class="tag tag-ok up-tag">通过</span>
+              <span class="up-main">IMG_2042.jpg</span>
+            </div>
+            <div class="up-item error">
+              <span class="tag tag-danger up-tag">模糊</span>
+              <button class="up-del" title="删除">×</button>
+              <span class="up-main">IMG_2043.jpg</span>
+            </div>
+            <div class="up-add">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              添加图片
+            </div>
+          </div>
+
+          <div class="notice notice-danger" style="margin-top:14px">
+            <div>
+              <div class="notice-title">第 3 张未通过初步校验</div>
+              检测到画面模糊（清晰度 42，低于阈值 60），这类图片会影响粒数与缺陷率识别，建议重新拍摄后再上传。
+            </div>
+          </div>
+
+          <div class="hint" style="margin-top:12px">
+            拍摄要求：平铺单层、白纸或白盘背景、室内均匀光、正上方俯拍、关闭闪光灯。
+            <a href="#" style="color:var(--brand-dark)">查看拍摄示例 →</a>
+          </div>
+        </div>
+
+        <!-- 自述等级 -->
+        <div class="form-sect">
+          <div class="form-sect-title">自述等级</div>
+          <div class="form-sect-desc">
+            按你认为的等级填，平台会用图像评估给出建议等级做比对。<b style="color:var(--ink-2)">高报会被重点审核</b>，严重不符将驳回。
+          </div>
+
+          <div class="grade-pick">
+            <div class="grade-opt"><b>特优</b><small>缺陷率 ≤1%</small></div>
+            <div class="grade-opt active"><b>特级</b><small>缺陷率 ≤2%</small></div>
+            <div class="grade-opt"><b>甲级</b><small>缺陷率 ≤5%</small></div>
+            <div class="grade-opt"><b>乙级</b><small>缺陷率 ≤10%</small></div>
+            <div class="grade-opt"><b>等外</b><small>处理品</small></div>
+          </div>
+
+          <div class="notice notice-warn" style="margin-top:16px">
+            <div>
+              <div class="notice-title">AI 预检建议：甲级（与自述差 1 级）</div>
+              当前 3 张有效图的综合缺陷率为 4.3%，落在甲级区间。按此提交，审核员会重点核对缺陷率。
+              你可以改选甲级直接通过，也可以保留特级并补充更清晰的细节图。
+            </div>
+          </div>
+        </div>
+
+        <!-- 补充说明 -->
+        <div class="form-sect">
+          <div class="form-sect-title">补充说明（选填）</div>
+          <div class="field-row one">
+            <div class="field">
+              <textarea class="textarea" rows="3" placeholder="例如：本批次为 7 月采摘，自然晾晒，果形偏长；如需可寄样。"></textarea>
+              <div class="hint">审核员会看到这段说明，如实描述有助于加快审核。</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 操作条 -->
+      <div class="actionbar">
+        <button class="btn">上一步</button>
+        <div class="row gap-12">
+          <span class="small muted">已填 3/5 步</span>
+          <button class="btn">重新预检</button>
+          <button class="btn btn-primary">下一步：描述与资质</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 右：预览 ============ -->
+    <aside class="preview-card">
+      <div class="between" style="margin-bottom:10px">
+        <span class="small strong">买家将看到</span>
+        <span class="xs muted">实时预览</span>
+      </div>
+
+      <div class="pv-product">
+        <div class="pv-img">
+          <div class="pv-badge"><span class="grade grade-b">特级</span></div>
+        </div>
+        <div class="pv-body">
+          <div class="pv-title">中宁宁杞5号 特级 280粒/50g 2026 新货</div>
+          <div class="small muted" style="margin-top:6px">宁夏中宁 · 280 粒/50g</div>
+          <div class="pv-metrics">
+            <div class="pv-m"><div class="k">缺陷率</div><div class="v" style="color:var(--warn)">4.3%</div></div>
+            <div class="pv-m"><div class="k">霉变</div><div class="v" style="color:var(--ok)">0.2%</div></div>
+            <div class="pv-m"><div class="k">粒数</div><div class="v">612</div></div>
+          </div>
+          <div class="between" style="margin-top:12px;align-items:flex-end">
+            <div class="pv-price">¥38.60<span style="font-size:12px;font-weight:400;color:var(--ink-3);margin-left:2px">/kg</span></div>
+            <span class="tag tag-plain">审核后展示</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-pad" style="margin-top:14px">
+        <div class="small strong" style="margin-bottom:10px">预检结果明细</div>
+        <div class="between" style="font-size:12.5px;padding:6px 0">
+          <span class="muted">有效图片</span><span class="num">3 / 4 张</span>
+        </div>
+        <div class="between" style="font-size:12.5px;padding:6px 0">
+          <span class="muted">识别粒数</span><span class="num">612 粒</span>
+        </div>
+        <div class="between" style="font-size:12.5px;padding:6px 0">
+          <span class="muted">综合缺陷率</span><span class="num" style="color:var(--warn);font-weight:600">4.3%</span>
+        </div>
+        <div class="between" style="font-size:12.5px;padding:6px 0">
+          <span class="muted">建议等级</span><span class="strong">甲级</span>
+        </div>
+        <div class="between" style="font-size:12.5px;padding:6px 0">
+          <span class="muted">评估置信度</span><span class="num">0.71</span>
+        </div>
+
+        <div class="hr" style="margin:10px 0"></div>
+
+        <div class="small muted" style="line-height:1.7">
+          预检结果仅你自己可见，不会展示给买家，保留 7 天。
+        </div>
+      </div>
+
+      <div class="notice notice-plain" style="margin-top:14px">
+        <div>
+          <div class="notice-title">提示</div>
+          等级只能由平台确认。买家看到的等级是审核后的结果，可能与你的自述不同。
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

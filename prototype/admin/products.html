@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>商品管理 · 杞市后台</title>
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+  .p-name { font-size: 13px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 260px; }
+  .p-no { font-size: 11px; color: var(--ink-4); font-family: ui-monospace, Menlo, Consolas, monospace; margin-top: 2px; }
+  .st { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; }
+  .st::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+  .st-on { color: var(--ok); }
+  .st-wait { color: var(--warn); }
+  .st-reject { color: var(--danger); }
+  .st-off { color: var(--ink-3); }
+  .grade-pair { display: flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; }
+  .grade-pair .arrow { color: var(--ink-4); font-size: 10px; }
+
+  /* 左树占位后表格变窄：压缩内边距并禁止换行 */
+  .table thead th, .table tbody td { padding: 10px 9px; }
+  .table .grade, .table .tag, .table .flag, .table .st { white-space: nowrap; }
+  .p-name { max-width: 200px; }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-hd">
+      <span class="logo" style="font-size:15px"><span class="logo-mark" style="width:24px;height:24px;font-size:12px">杞</span>杞市后台</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-group">
+        <a class="sidebar-link" href="dashboard.html">运营看板</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">交易</div>
+        <a class="sidebar-link" href="audit.html">商品审核 <span class="badge">15</span></a>
+        <a class="sidebar-link active" href="products.html">商品管理</a>
+        <a class="sidebar-link" href="#">订单管理</a>
+        <a class="sidebar-link" href="#">售后仲裁 <span class="badge" style="background:var(--warn)">2</span></a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">卖家与用户</div>
+        <a class="sidebar-link" href="#">卖家与资质 <span class="badge" style="background:var(--ink-4)">3</span></a>
+        <a class="sidebar-link" href="#">用户管理</a>
+        <a class="sidebar-link" href="#">角色权限</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">智能体</div>
+        <a class="sidebar-link" href="kb.html">知识库</a>
+        <a class="sidebar-link" href="#">Agent 配置</a>
+        <a class="sidebar-link" href="#">链路追踪</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">系统</div>
+        <a class="sidebar-link" href="#">模型与阈值</a>
+        <a class="sidebar-link" href="#">审计日志</a>
+      </div>
+    </nav>
+    <div style="padding:12px;border-top:1px solid var(--line-2)">
+      <div class="row gap-8" style="padding:6px 8px">
+        <div class="avatar">李</div>
+        <div style="min-width:0">
+          <div class="small" style="font-weight:500">李审核</div>
+          <div class="xs muted">审核员 · 工号 A023</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+
+    <div class="admin-top">
+      <div class="crumb">
+        <span>交易</span><span class="sep">/</span><span class="cur">商品管理</span>
+      </div>
+      <div style="margin-left:auto" class="row gap-8">
+        <button class="btn btn-sm">导入</button>
+        <button class="btn btn-sm">导出</button>
+      </div>
+    </div>
+
+    <div class="admin-body">
+
+      <!-- ============ 左树右表 ============ -->
+      <div class="tree-layout">
+
+        <!-- 左：树 -->
+        <aside class="tree-panel">
+          <div class="tree-hd">
+            <span class="tree-hd-t">商品分类</span>
+            <span class="xs muted">5,412</span>
+          </div>
+
+          <div class="tree-search">
+            <input class="input" placeholder="搜索品种或产区">
+          </div>
+
+          <div class="tree-body">
+            <div class="tree-node root active"><span class="tree-caret open">▶</span><span class="tree-name">全部商品</span><span class="tree-cnt">5,412</span></div>
+
+            <div class="tree-node lv1"><span class="tree-name" style="color:var(--ink-3);font-size:12px">按状态</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">待审核</span><span class="tree-cnt">15</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">已上架</span><span class="tree-cnt">3,286</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">已驳回</span><span class="tree-cnt">84</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">已下架</span><span class="tree-cnt">1,027</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">违规下架</span><span class="tree-cnt">12</span></div>
+
+            <div class="tree-divider"></div>
+
+            <div class="tree-node lv1"><span class="tree-name" style="color:var(--ink-3);font-size:12px">按产区</span></div>
+
+            <div class="tree-node lv2"><span class="tree-caret open">▶</span><span class="tree-name">宁夏</span><span class="tree-cnt">1,620</span></div>
+            <div class="tree-node lv3 active"><span class="tree-dot"></span><span class="tree-name">中宁</span><span class="tree-cnt">1,240</span></div>
+            <div class="tree-node lv3"><span class="tree-dot"></span><span class="tree-name">中卫其他</span><span class="tree-cnt">380</span></div>
+
+            <div class="tree-node lv2"><span class="tree-caret">▶</span><span class="tree-name">青海</span><span class="tree-cnt">890</span></div>
+            <div class="tree-node lv2"><span class="tree-caret">▶</span><span class="tree-name">新疆</span><span class="tree-cnt">514</span></div>
+            <div class="tree-node lv2"><span class="tree-caret">▶</span><span class="tree-name">甘肃</span><span class="tree-cnt">389</span></div>
+            <div class="tree-node lv2"><span class="tree-caret">▶</span><span class="tree-name">内蒙古</span><span class="tree-cnt">126</span></div>
+
+            <div class="tree-divider"></div>
+
+            <div class="tree-node lv1"><span class="tree-name" style="color:var(--ink-3);font-size:12px">按品种</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">宁杞1号</span><span class="tree-cnt">1,842</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">宁杞5号</span><span class="tree-cnt">2,106</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">宁杞7号</span><span class="tree-cnt">724</span></div>
+            <div class="tree-node lv2"><span class="tree-dot"></span><span class="tree-name">大麻叶</span><span class="tree-cnt">516</span></div>
+          </div>
+
+          <div class="tree-foot">
+            当前：宁夏 / 中宁 · 1,240 件
+          </div>
+        </aside>
+
+        <!-- 右：表 -->
+        <div class="table-panel">
+
+          <div class="table-toolbar">
+            <div class="row gap-8">
+              <input class="input input-sm" placeholder="搜商品标题 / 编号 / 卖家" style="width:240px">
+              <select class="select" style="width:112px;height:30px;font-size:13px">
+                <option>全部状态</option>
+                <option>待审核</option>
+                <option>已上架</option>
+                <option>已驳回</option>
+              </select>
+              <select class="select" style="width:112px;height:30px;font-size:13px">
+                <option>全部等级</option>
+                <option>特优</option>
+                <option>特级</option>
+                <option>甲级</option>
+              </select>
+              <button class="btn btn-sm">查询</button>
+            </div>
+            <div class="row gap-8">
+              <button class="btn btn-sm">批量下架</button>
+              <button class="btn btn-sm btn-primary">新建商品</button>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width:32px"><input type="checkbox"></th>
+                  <th style="width:246px">商品</th>
+                  <th style="width:82px">卖家</th>
+                  <th style="width:112px">自述 → 认定</th>
+                  <th style="width:62px">AI</th>
+                  <th style="width:80px">差异</th>
+                  <th class="num" style="width:70px">报价</th>
+                  <th class="num" style="width:62px">库存</th>
+                  <th style="width:66px">状态</th>
+                  <th style="width:84px">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="row gap-8">
+                      <div class="cell-thumb"></div>
+                      <div style="min-width:0">
+                        <div class="p-name">中宁宁杞5号 特级 280粒/50g 2026 新货</div>
+                        <div class="p-no">GQ-20261026-0231</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="small">杞源合作社</td>
+                  <td>
+                    <div class="grade-pair">
+                      <span class="grade grade-b">特级</span>
+                      <span class="arrow">→</span>
+                      <span class="grade grade-e">待定</span>
+                    </div>
+                  </td>
+                  <td><span class="grade grade-d">乙级</span></td>
+                  <td><span class="flag flag-danger">高报 2 级</span></td>
+                  <td class="num">¥46.20</td>
+                  <td class="num">1,200</td>
+                  <td><span class="st st-wait">待审核</span></td>
+                  <td>
+                    <a href="audit.html" class="btn btn-sm btn-primary" style="height:26px;padding:0 8px">去审核</a>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="row gap-8">
+                      <div class="cell-thumb"></div>
+                      <div style="min-width:0">
+                        <div class="p-name">中宁大麻叶优系 特级 280粒 颗粒均匀 色深</div>
+                        <div class="p-no">GQ-20261022-0187</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="small">红宝枸杞</td>
+                  <td>
+                    <div class="grade-pair">
+                      <span class="grade grade-b">特级</span>
+                      <span class="arrow">→</span>
+                      <span class="grade grade-b">特级</span>
+                    </div>
+                  </td>
+                  <td><span class="grade grade-b">特级</span></td>
+                  <td><span class="flag flag-ok">一致</span></td>
+                  <td class="num">¥58.00</td>
+                  <td class="num">600</td>
+                  <td><span class="st st-on">已上架</span></td>
+                  <td>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">下架</button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="row gap-8">
+                      <div class="cell-thumb"></div>
+                      <div style="min-width:0">
+                        <div class="p-name">中宁宁杞1号 特级 280粒 传统晾晒</div>
+                        <div class="p-no">GQ-20261018-0142</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="small">王记枸杞</td>
+                  <td>
+                    <div class="grade-pair">
+                      <span class="grade grade-b">特级</span>
+                      <span class="arrow">→</span>
+                      <span class="grade grade-d">乙级</span>
+                    </div>
+                  </td>
+                  <td><span class="grade grade-d">乙级</span></td>
+                  <td><span class="flag flag-danger">改级 -2</span></td>
+                  <td class="num">¥38.60</td>
+                  <td class="num">3,000</td>
+                  <td><span class="st st-on">已上架</span></td>
+                  <td>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">下架</button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="row gap-8">
+                      <div class="cell-thumb"></div>
+                      <div style="min-width:0">
+                        <div class="p-name">中宁宁杞5号 特级 280粒 大货可长期供</div>
+                        <div class="p-no">GQ-20261015-0098</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="small">中宁枸杞集团</td>
+                  <td>
+                    <div class="grade-pair">
+                      <span class="grade grade-b">特级</span>
+                      <span class="arrow">→</span>
+                      <span class="grade grade-b">特级</span>
+                    </div>
+                  </td>
+                  <td><span class="grade grade-b">特级</span></td>
+                  <td><span class="flag flag-ok">一致</span></td>
+                  <td class="num">¥44.80</td>
+                  <td class="num">20,000</td>
+                  <td><span class="st st-on">已上架</span></td>
+                  <td>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">下架</button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="row gap-8">
+                      <div class="cell-thumb"></div>
+                      <div style="min-width:0">
+                        <div class="p-name">中宁宁杞5号 特级 180粒 礼盒装</div>
+                        <div class="p-no">GQ-20261012-0065</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="small">杞源合作社</td>
+                  <td>
+                    <div class="grade-pair">
+                      <span class="grade grade-b">特级</span>
+                      <span class="arrow">→</span>
+                      <span class="grade grade-e">—</span>
+                    </div>
+                  </td>
+                  <td><span class="grade grade-e">—</span></td>
+                  <td><span class="flag flag-danger">已驳回</span></td>
+                  <td class="num">¥72.00</td>
+                  <td class="num">300</td>
+                  <td><span class="st st-reject">已驳回</span></td>
+                  <td>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">查看</button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="row gap-8">
+                      <div class="cell-thumb"></div>
+                      <div style="min-width:0">
+                        <div class="p-name">中宁宁杞7号 甲级 380粒 走量装</div>
+                        <div class="p-no">GQ-20260928-0031</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="small">中宁枸杞集团</td>
+                  <td>
+                    <div class="grade-pair">
+                      <span class="grade grade-c">甲级</span>
+                      <span class="arrow">→</span>
+                      <span class="grade grade-c">甲级</span>
+                    </div>
+                  </td>
+                  <td><span class="grade grade-c">甲级</span></td>
+                  <td><span class="flag flag-info">低报 1 级</span></td>
+                  <td class="num">¥31.20</td>
+                  <td class="num">5,000</td>
+                  <td><span class="st st-off">已下架</span></td>
+                  <td>
+                    <button class="btn btn-sm" style="height:26px;padding:0 8px">查看</button>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-foot">
+            <div class="row gap-8">
+              <span class="small muted">已选 0 项</span>
+              <span class="small muted">·</span>
+              <span class="small muted">共 1,240 条</span>
+            </div>
+            <div class="row gap-8">
+              <button class="btn btn-sm">上一页</button>
+              <button class="btn btn-sm btn-primary">1</button>
+              <button class="btn btn-sm">2</button>
+              <button class="btn btn-sm">3</button>
+              <button class="btn btn-sm">…</button>
+              <button class="btn btn-sm">62</button>
+              <button class="btn btn-sm">下一页</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>
