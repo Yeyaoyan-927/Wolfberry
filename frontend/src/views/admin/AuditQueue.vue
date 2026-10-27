@@ -6,6 +6,9 @@
         <el-radio-button v-for="f in ['红','黄','灰','蓝','绿']" :key="f" :value="f">{{ f }}标</el-radio-button>
       </el-radio-group>
       <span class="dim">红标（自述高报 ≥2 级）优先处理；共 {{ total }} 条待审</span>
+      <el-tag size="small" :type="auth.role === 'admin' ? 'success' : 'danger'" class="who">
+        当前登录：{{ auth.displayName }}（{{ auth.role }}）
+      </el-tag>
     </div>
 
     <div class="card list" v-loading="loading">
@@ -35,9 +38,11 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { auditQueue } from '../../api'
+import { useAuthStore } from '../../stores/auth'
 import GradeTag from '../../components/GradeTag.vue'
 import DiffFlag from '../../components/DiffFlag.vue'
 
+const auth = useAuthStore()
 const items = ref([])
 const total = ref(0)
 const loading = ref(false)
@@ -60,6 +65,7 @@ onMounted(load)
 <style scoped>
 .bar { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
 .dim { font-size: 12.5px; color: var(--ink-3); }
+.who { margin-left: auto; }
 .list { padding: 4px 18px; }
 .qrow { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
 .qrow:last-child { border-bottom: none; }
