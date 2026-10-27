@@ -15,6 +15,9 @@ export const useAuthStore = defineStore('auth', {
   },
   actions: {
     setAuth(token, user) {
+      // 清掉历史版本遗留的 localStorage 凭据，防止新旧 token 混用
+      localStorage.removeItem('wb_token')
+      localStorage.removeItem('wb_user')
       this.token = token
       this.user = user
       store.setItem('wb_token', token)

@@ -6,7 +6,8 @@ import router from '../router'
 const http = axios.create({ baseURL: '/api/v1', timeout: 30000 })
 
 http.interceptors.request.use((cfg) => {
-  const token = localStorage.getItem('wb_token')
+  // 与 auth store 一致：token 存 sessionStorage
+  const token = sessionStorage.getItem('wb_token') || localStorage.getItem('wb_token')
   if (token) cfg.headers.Authorization = `Bearer ${token}`
   return cfg
 })
