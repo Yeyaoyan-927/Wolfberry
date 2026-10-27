@@ -11,17 +11,27 @@
       <el-menu :default-active="active" router class="menu" background-color="#221510"
                text-color="#c9b8a8" active-text-color="#ffffff">
         <el-menu-item index="/admin/dashboard">
-          <el-icon><DataBoard /></el-icon>仪表盘
+          <el-icon><DataBoard /></el-icon>运营看板
         </el-menu-item>
-        <el-menu-item index="/admin/audit">
-          <el-icon><Stamp /></el-icon>审核工作台
-        </el-menu-item>
-        <el-menu-item index="/admin/products">
-          <el-icon><Goods /></el-icon>商品管理
-        </el-menu-item>
-        <el-menu-item index="/admin/kb">
-          <el-icon><Collection /></el-icon>知识库
-        </el-menu-item>
+        <el-menu-item-group>
+          <template #title><span class="grp-title">交易</span></template>
+          <el-menu-item index="/admin/audit"><el-icon><Stamp /></el-icon>商品审核</el-menu-item>
+          <el-menu-item index="/admin/products"><el-icon><Goods /></el-icon>商品管理</el-menu-item>
+          <el-menu-item index="/admin/orders"><el-icon><Tickets /></el-icon>订单管理</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group>
+          <template #title><span class="grp-title">卖家与用户</span></template>
+          <el-menu-item index="/admin/users"><el-icon><UserFilled /></el-icon>用户管理</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group>
+          <template #title><span class="grp-title">智能体</span></template>
+          <el-menu-item index="/admin/kb"><el-icon><Collection /></el-icon>知识库</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group>
+          <template #title><span class="grp-title">系统</span></template>
+          <el-menu-item index="/admin/thresholds"><el-icon><SetUp /></el-icon>模型与阈值</el-menu-item>
+          <el-menu-item index="/admin/logs"><el-icon><Document /></el-icon>审计日志</el-menu-item>
+        </el-menu-item-group>
       </el-menu>
     </el-aside>
     <el-container>
@@ -49,8 +59,12 @@ import { useAuthStore } from '../stores/auth'
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
-const active = computed(() => '/admin/' + (route.path.split('/')[2] || 'audit').split('/')[0])
-const pageTitle = computed(() => ({ audit: '审核工作台', products: '商品管理' }[active.value.split('/')[2]] || '运营后台'))
+const active = computed(() => '/admin/' + (route.path.split('/')[2] || 'dashboard').split('/')[0])
+const TITLES = {
+  dashboard: '运营看板', audit: '商品审核', products: '商品管理', orders: '订单管理',
+  users: '用户管理', kb: '知识库', thresholds: '模型与阈值', logs: '审计日志',
+}
+const pageTitle = computed(() => TITLES[active.value.split('/')[2]] || '运营后台')
 
 function onLogout() {
   auth.logout()
@@ -69,6 +83,8 @@ function onLogout() {
 .name { color: #fff; font-weight: 700; font-size: 16px; letter-spacing: 1px; }
 .sub { color: #a08b78; font-size: 11px; }
 .menu { border-right: none; }
+.menu :deep(.el-menu-item-group__title) { padding: 10px 20px 2px; }
+.grp-title { font-size: 10.5px; color: #7a6553; letter-spacing: .1em; }
 .admin-top { background: #fff; border-bottom: 1px solid var(--line); display: flex; align-items: center;
   justify-content: space-between; padding: 0 24px; }
 .crumb { font-weight: 600; }

@@ -13,9 +13,9 @@ TRANSITIONS = {
 }
 
 ACTION_ROLE = {
-    "confirm": ("seller",),
-    "cancel": ("buyer", "seller"),
-    "ship": ("seller",),
+    "confirm": ("seller", "admin"),
+    "cancel": ("buyer", "seller", "admin"),
+    "ship": ("seller", "admin"),
     "receive": ("buyer",),
 }
 

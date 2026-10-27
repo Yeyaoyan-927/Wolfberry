@@ -37,6 +37,13 @@ export const auditQueue = (params) => http.get('/admin/audit/queue', { params })
 export const adminStats = () => http.get('/admin/audit/stats')
 export const queueStats = () => http.get('/admin/audit/queue-stats')
 
+// 管理端：用户 / 阈值 / 审计日志
+export const adminUsers = (params) => http.get('/admin/users', { params })
+export const setUserStatus = (id, isActive) =>
+  http.patch(`/admin/users/${id}/status`, null, { params: { is_active: isActive } })
+export const adminThresholds = () => http.get('/admin/thresholds')
+export const adminAuditLogs = (params) => http.get('/admin/audit/logs', { params })
+
 // 知识库
 export const kbDocuments = (params) => http.get('/kb/documents', { params })
 export const uploadKbDoc = (file, meta) => {
