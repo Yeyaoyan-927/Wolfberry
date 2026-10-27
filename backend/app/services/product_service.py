@@ -10,8 +10,10 @@ from sqlalchemy.orm import Session
 from app.core.errors import BizError, Err
 from app.domain.optimize import grade_gap
 from app.models.product import (
+    STATUS_OFF_SHELF,
     STATUS_ON_SHELF,
     STATUS_PENDING,
+    STATUS_REJECTED,
     Product,
     ProductImage,
 )
@@ -101,7 +103,51 @@ def get_detail(session: Session, product_id: int) -> ProductOut:
     product = repo.detail(product_id)
     if product is None:
         raise BizError(Err.NOT_FOUND, "商品不存在")
-    return to_out(product, list(repo.images(product_id)))
+    out = to_out(product, list(repo.images(product_id)))
+    # 驳回原因（卖家在"我的商品"可见；只取最新一条，审核记录本身不可删）
+    if product.status == STATUS_REJECTED:
+        from sqlalchemy import select
+
+        from app.models.audit import ACT_REJECT, AuditLog
+
+        out.reject_reason = session.scalar(
+            select(AuditLog.reason)
+            .where(AuditLog.product_id == product_id, AuditLog.action == ACT_REJECT)
+            .order_by(AuditLog.id.desc())
+            .limit(1)
+        ) or ""
+    return out
+
+
+def list_mine(session: Session, *, seller_id: int, page: int = 1, size: int = 20) -> tuple[list[ProductOut], int]:
+    """卖家：我发布的商品（全部状态）。"""
+    repo = ProductRepo(session)
+    rows, total = repo.search(seller_id=seller_id, offset=(page - 1) * size, limit=size)
+    return [to_out(r, list(repo.images(r.id))) for r in rows], total
+
+
+def set_shelf(session: Session, *, product_id: int, seller_id: int, on_shelf: bool) -> Product:
+    """上下架：下架（3→5）/ 重新提交（5→1 待审核）。
+
+    已上架商品改图改级必须重新审核（架构底线），重新提交走待审核。
+    """
+    repo = ProductRepo(session)
+    product = repo.detail(product_id)
+    if product is None:
+        raise BizError(Err.NOT_FOUND, "商品不存在")
+    if product.seller_id != seller_id:
+        raise BizError(Err.FORBIDDEN, "只能操作自己的商品")
+
+    if on_shelf:
+        if product.status != STATUS_OFF_SHELF:
+            raise BizError(Err.PARAM_INVALID, "仅已下架商品可重新提交")
+        product.status = STATUS_PENDING
+    else:
+        if product.status != STATUS_ON_SHELF:
+            raise BizError(Err.PARAM_INVALID, "仅在售商品可下架")
+        product.status = STATUS_OFF_SHELF
+    session.flush()
+    return product
 
 
 def list_products(

@@ -100,6 +100,34 @@ def list_products(
     )
 
 
+@router.get("/products/mine")
+def list_my_products(
+    session: DbSession,
+    seller: SellerUser,
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+):
+    """卖家：我发布的商品（全部状态，含待审/驳回/下架）。"""
+    trace = new_trace_id()
+    items, total = product_service.list_mine(session, seller_id=seller.id, page=page, size=size)
+    return ok({"items": jsonable_encoder(items), "total": total, "page": page, "size": size},
+              trace_id=trace)
+
+
+@router.patch("/products/{product_id}/shelf")
+def set_product_shelf(
+    product_id: int,
+    seller: SellerUser,
+    session: DbSession,
+    on_shelf: bool = Query(..., description="false 下架 / true 重新提交审核"),
+):
+    trace = new_trace_id()
+    product = product_service.set_shelf(
+        session, product_id=product_id, seller_id=seller.id, on_shelf=on_shelf
+    )
+    return ok({"id": product.id, "status": product.status}, trace_id=trace)
+
+
 @router.get("/products/{product_id}")
 def product_detail(product_id: int, session: DbSession):
     trace = new_trace_id()

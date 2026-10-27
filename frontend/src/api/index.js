@@ -12,6 +12,11 @@ export const listProducts = (params) => http.get('/products', { params })
 
 export const getProduct = (id) => http.get(`/products/${id}`)
 
+export const myProducts = (params) => http.get('/products/mine', { params })
+
+export const marketSummary = (params) => http.get('/market/summary', { params })
+export const marketOrigins = () => http.get('/market/origins')
+
 export const createProduct = (payload) => http.post('/products', payload)
 
 export const uploadProductImage = (id, file) => {

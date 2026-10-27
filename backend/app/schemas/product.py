@@ -56,6 +56,7 @@ class ProductOut(BaseModel):
     status: int
     description: str
     ai_grade: str | None
+    reject_reason: str = ""
     ai_confidence: float | None
     defect_ratio: float | None
     moldy_ratio: float | None

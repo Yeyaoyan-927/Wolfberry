@@ -10,6 +10,11 @@
             <el-option v-for="v in varieties" :key="v" :label="v" :value="v" />
           </el-select>
         </el-form-item>
+        <el-form-item label="产区">
+          <el-select v-model="q.origin" clearable placeholder="全部" style="width: 120px">
+            <el-option v-for="o in origins" :key="o" :label="o" :value="o" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="认定等级">
           <el-select v-model="q.grade" clearable placeholder="全部" style="width: 120px">
             <el-option v-for="g in grades" :key="g" :label="g" :value="g" />
@@ -70,16 +75,19 @@
 
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { listProducts } from '../../api'
 import GradeTag from '../../components/GradeTag.vue'
 import DiffFlag from '../../components/DiffFlag.vue'
 
 const grades = ['特优', '特级', '甲级', '乙级']
 const varieties = ['宁杞5号', '宁杞7号', '大麻叶']
+const origins = ['中宁', '诺木洪', '靖远']
+const route = useRoute()
 const items = ref([])
 const total = ref(0)
 const loading = ref(false)
-const q = reactive({ page: 1, size: 12, keyword: '', variety: '', grade: '', min_price: undefined, max_price: undefined, order_by: 'newest' })
+const q = reactive({ page: 1, size: 12, keyword: '', variety: '', grade: '', origin: route.query.origin || '', min_price: undefined, max_price: undefined, order_by: 'newest' })
 
 function flagOf(p) {
   const conf = p.ai_confidence ?? null

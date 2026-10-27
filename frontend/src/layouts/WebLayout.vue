@@ -10,15 +10,17 @@
         <el-menu mode="horizontal" :default-active="active" class="nav" router>
           <el-menu-item index="/home">首页</el-menu-item>
           <el-menu-item index="/products">货源市场</el-menu-item>
+          <el-menu-item index="/market">行情中心</el-menu-item>
           <el-menu-item index="/chat">智能问答</el-menu-item>
           <el-menu-item v-if="auth.isLogin" index="/orders">我的订单</el-menu-item>
+          <el-menu-item v-if="['seller','admin'].includes(auth.role)" index="/my-products">我的商品</el-menu-item>
           <el-menu-item v-if="['seller','admin'].includes(auth.role)" index="/publish">发布货源</el-menu-item>
         </el-menu>
         <div class="right">
           <template v-if="auth.isLogin">
             <el-tag v-if="auth.role === 'admin'" size="small" @click="$router.push('/admin/audit')"
                     class="admin-entry" effect="dark">后台管理</el-tag>
-            <span class="who">{{ auth.displayName }}</span>
+            <span class="who link" @click="$router.push('/profile')">{{ auth.displayName }}</span>
             <el-button link @click="onLogout">退出</el-button>
           </template>
         </div>
@@ -70,6 +72,8 @@ function onLogout() {
 .right { display: flex; align-items: center; gap: 10px; }
 .admin-entry { cursor: pointer; }
 .who { font-size: 13px; color: var(--ink-2); }
+.who.link { cursor: pointer; }
+.who.link:hover { color: var(--brand); }
 .main { padding: 0; }
 .footer { display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--ink-4);
   border-top: 1px solid var(--line); background: #fff; }

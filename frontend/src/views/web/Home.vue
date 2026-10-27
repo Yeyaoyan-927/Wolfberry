@@ -41,6 +41,40 @@
     </section>
 
     <section class="sect">
+      <div class="sect-head">
+        <h2>行情速览</h2>
+        <router-link to="/market" class="more">行情中心 →</router-link>
+      </div>
+      <div class="market card">
+        <div class="m-left">
+          <div class="m-label">{{ mkt.variety }} · {{ mkt.grade }} 近 30 天均价</div>
+          <div class="m-price num">¥{{ mkt.summary?.avg ?? '—' }}<span class="u">/kg</span></div>
+          <div class="m-sub num" :class="trendCls">
+            较前期 {{ mkt.summary?.trend_pct == null ? '—' : (mkt.summary.trend_pct > 0 ? '↑ ' : mkt.summary.trend_pct < 0 ? '↓ ' : '') + Math.abs(mkt.summary.trend_pct) + '%' }}
+            · 区间 ¥{{ mkt.summary?.low ?? '—' }} ~ ¥{{ mkt.summary?.high ?? '—' }}
+          </div>
+        </div>
+        <svg v-if="mkt.points?.length" viewBox="0 0 620 110" class="m-chart" preserveAspectRatio="none">
+          <path :d="mktArea" fill="#c22f27" opacity=".08" />
+          <path :d="mktLine" fill="none" stroke="#C22F27" stroke-width="2" />
+        </svg>
+      </div>
+    </section>
+
+    <section class="sect" v-if="origins.length">
+      <div class="sect-head"><h2>按产区找</h2></div>
+      <el-row :gutter="16">
+        <el-col v-for="o in origins" :key="o.origin" :span="8">
+          <div class="ocard card" @click="$router.push({ path: '/products', query: { origin: o.origin } })">
+            <div class="o-name">{{ o.origin }}</div>
+            <div class="o-meta num">在售 {{ o.count }} 件 · 均价 <b>¥{{ o.avg_price }}</b> /kg 起</div>
+            <div class="o-tags">{{ o.varieties.join(' · ') }}</div>
+          </div>
+        </el-col>
+      </el-row>
+    </section>
+
+    <section class="sect">
       <div class="sect-head"><h2>平台如何保证「所见即所得」</h2></div>
       <el-row :gutter="16">
         <el-col v-for="w in whys" :key="w.t" :span="8">
@@ -57,11 +91,29 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { listProducts } from '../../api'
+import { listProducts, marketOrigins, marketSummary } from '../../api'
 import GradeTag from '../../components/GradeTag.vue'
 import DiffFlag from '../../components/DiffFlag.vue'
 
 const latest = ref([])
+const mkt = ref({})
+const origins = ref([])
+
+// 迷你行情折线
+const mktLine = computed(() => {
+  const pts = mkt.value.points || []
+  if (!pts.length) return ''
+  const min = Math.min(...pts.map((p) => p.low))
+  const max = Math.max(...pts.map((p) => p.high))
+  const y = (v) => 100 - ((v - min) / (max - min || 1)) * 88 - 6
+  const x = (i) => (i / (pts.length - 1 || 1)) * 620
+  return pts.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.avg).toFixed(1)}`).join(' ')
+})
+const mktArea = computed(() => (mktLine.value ? `${mktLine.value} L620,110 L0,110 Z` : ''))
+const trendCls = computed(() => {
+  const t = mkt.value.summary?.trend_pct
+  return t == null ? '' : t > 0 ? 'up' : t < 0 ? 'down' : ''
+})
 const stats = computed(() => ({
   onSale: latest.value.length,
   assessed: latest.value.filter((p) => p.ai_grade || p.defect_ratio !== null).length,
@@ -85,8 +137,14 @@ function flagOf(p) {
 
 onMounted(async () => {
   try {
-    const data = await listProducts({ size: 8, order_by: 'newest' })
+    const [data, market, originList] = await Promise.all([
+      listProducts({ size: 8, order_by: 'newest' }),
+      marketSummary({ variety: '宁杞5号', grade: '特级', days: 30 }).catch(() => ({})),
+      marketOrigins().catch(() => []),
+    ])
     latest.value = data.items
+    mkt.value = market
+    origins.value = originList || []
   } catch { /* 已统一提示 */ }
 })
 </script>
@@ -125,4 +183,19 @@ onMounted(async () => {
 .w-no { font-size: 12px; color: var(--brand); font-weight: 700; letter-spacing: 1px; }
 .w-t { font-weight: 700; margin: 6px 0; }
 .w-d { font-size: 13px; color: var(--ink-3); line-height: 1.7; }
+.market { display: flex; align-items: center; gap: 24px; padding: 18px 24px; }
+.m-left { flex: none; min-width: 300px; }
+.m-label { font-size: 12.5px; color: var(--ink-3); }
+.m-price { font-size: 34px; font-weight: 800; color: var(--brand); line-height: 1.2; margin: 4px 0; }
+.m-price .u { font-size: 13px; color: var(--ink-4); font-weight: 400; margin-left: 4px; }
+.m-sub { font-size: 12.5px; color: var(--ink-3); }
+.up { color: #c22f27; font-weight: 600; }
+.down { color: #1d8a4e; font-weight: 600; }
+.m-chart { flex: 1; height: 110px; }
+.ocard { padding: 16px 18px; cursor: pointer; transition: all .15s; }
+.ocard:hover { border-color: var(--brand-line); box-shadow: 0 6px 18px rgba(120,60,40,.08); }
+.o-name { font-size: 17px; font-weight: 700; }
+.o-meta { font-size: 12.5px; color: var(--ink-3); margin: 6px 0 4px; }
+.o-meta b { color: var(--brand); }
+.o-tags { font-size: 11.5px; color: var(--ink-4); }
 </style>

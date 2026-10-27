@@ -15,6 +15,9 @@ const routes = [
       { path: '/orders', name: 'orders', component: () => import('../views/web/Orders.vue') },
       { path: '/publish', name: 'publish', component: () => import('../views/web/Publish.vue'), meta: { seller: true } },
       { path: '/chat', name: 'chat', component: () => import('../views/web/Chat.vue') },
+      { path: '/market', name: 'market', component: () => import('../views/web/Market.vue') },
+      { path: '/my-products', name: 'my-products', component: () => import('../views/web/MyProducts.vue'), meta: { seller: true } },
+      { path: '/profile', name: 'profile', component: () => import('../views/web/Profile.vue') },
     ],
   },
   // ---------- 后台（每个子路由显式声明 admin，不依赖 meta 合并） ----------
