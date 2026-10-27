@@ -60,7 +60,6 @@ def add_product_image(
     data: bytes,
     filename: str,
     content_type: str,
-    base_url: str,
 ) -> ProductImage:
     stored, l1_status, l1_detail = upload_service.save_image(data, filename, content_type)
 
@@ -69,7 +68,8 @@ def add_product_image(
     image = ProductImage(
         product_id=product.id,
         object_key=stored.key,
-        url=upload_service.absolutize(stored.url, base_url),
+        # COS：完整签名 URL；本地：相对路径 /files/{key}（前端经代理同源访问，不绑定域名端口）
+        url=stored.url,
         file_name=filename,
         content_type=stored.content_type,
         size=stored.size,

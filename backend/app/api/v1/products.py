@@ -54,7 +54,6 @@ async def upload_product_image(
         data=data,
         filename=file.filename or "upload.jpg",
         content_type=file.content_type or "image/jpeg",
-        base_url=str(request.base_url).rstrip("/"),
     )
 
     if settings.ASSESS_ENABLED:
