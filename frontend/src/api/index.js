@@ -35,6 +35,24 @@ export const listOrders = (params) => http.get('/orders', { params })
 export const confirmOrder = (id) => http.post(`/orders/${id}/confirm`)
 export const shipOrder = (id, data) => http.post(`/orders/${id}/ship`, data)
 export const receiveOrder = (id) => http.post(`/orders/${id}/receive`)
+/** 通用图片上传（售后举证 / 头像等），scene 决定存储目录 */
+export const uploadImage = (file, scene = 'after-sale/evidence') => {
+  const fd = new FormData()
+  fd.append('file', file)
+  return http.post(`/uploads?scene=${encodeURIComponent(scene)}`, fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+
+// 售后
+export const applyAfterSale = (orderId, payload) => http.post(`/orders/${orderId}/after-sale`, payload)
+export const listAfterSales = (params) => http.get('/after-sales', { params })
+export const afterSaleDetail = (id) => http.get(`/after-sales/${id}`)
+export const respondAfterSale = (id, payload) => http.post(`/after-sales/${id}/respond`, payload)
+export const escalateAfterSale = (id, note) => http.post(`/after-sales/${id}/escalate`, null, { params: { note: note || '' } })
+export const resolveAfterSale = (id, payload) => http.post(`/admin/after-sales/${id}/resolve`, payload)
+export const afterSaleStats = () => http.get('/admin/after-sales/stats')
+
 export const cancelOrder = (id, reason) => http.post(`/orders/${id}/cancel`, { reason })
 export const registerPay = (id, voucher_key) => http.post(`/orders/${id}/pay`, { voucher_key })
 

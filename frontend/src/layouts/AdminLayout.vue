@@ -18,6 +18,7 @@
           <el-menu-item index="/admin/audit"><el-icon><Stamp /></el-icon>商品审核</el-menu-item>
           <el-menu-item index="/admin/products"><el-icon><Goods /></el-icon>商品管理</el-menu-item>
           <el-menu-item index="/admin/orders"><el-icon><Tickets /></el-icon>订单管理</el-menu-item>
+          <el-menu-item index="/admin/after-sales"><el-icon><CircleCheck /></el-icon>售后仲裁</el-menu-item>
         </el-menu-item-group>
         <el-menu-item-group>
           <template #title><span class="grp-title">卖家与用户</span></template>
@@ -61,6 +62,7 @@ const route = useRoute()
 const router = useRouter()
 const active = computed(() => '/admin/' + (route.path.split('/')[2] || 'dashboard').split('/')[0])
 const TITLES = {
+  'after-sales': '售后仲裁',
   dashboard: '运营看板', audit: '商品审核', products: '商品管理', orders: '订单管理',
   users: '用户管理', kb: '知识库', thresholds: '模型与阈值', logs: '审计日志',
 }

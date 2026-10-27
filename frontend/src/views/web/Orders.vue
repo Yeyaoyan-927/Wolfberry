@@ -41,6 +41,7 @@
             <el-button size="small" type="success" v-if="o.status === 3" @click="doReceive(o)">确认收货</el-button>
             <el-button size="small" plain v-if="o.status === 1 && o.pay_status === 0" @click="doPay(o)">登记支付</el-button>
             <el-button size="small" plain type="danger" v-if="[1, 2].includes(o.status)" @click="doCancel(o)">取消</el-button>
+            <el-button size="small" plain type="warning" v-if="o.status === 4 && isBuyer" @click="openAfterSale(o)">申请售后</el-button>
           </template>
         </div>
       </div>
@@ -48,6 +49,43 @@
     </div>
 
     <!-- 发货对话框 -->
+    <!-- 申请售后 -->
+    <el-dialog v-model="asDialog" title="申请售后" width="520px">
+      <el-alert type="info" :closable="false" class="as-tip"
+                title="平台会调取该商品上架时的 AI 评估快照与你的举证图比对，作为裁定依据；请如实描述并上传能说明问题的照片。" />
+      <el-form label-width="88px">
+        <el-form-item label="问题类型" required>
+          <el-radio-group v-model="asForm.type">
+            <el-radio-button :value="1">质量问题</el-radio-button>
+            <el-radio-button :value="2">数量不符</el-radio-button>
+            <el-radio-button :value="3">与描述不符</el-radio-button>
+            <el-radio-button :value="4">物流问题</el-radio-button>
+            <el-radio-button :value="5">其他</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="申请说明" required>
+          <el-input v-model="asForm.reason" type="textarea" :rows="3" maxlength="500" show-word-limit
+                    placeholder="例如：底层约三分之一出现霉变，开箱视频与照片已上传" />
+        </el-form-item>
+        <el-form-item label="退款金额">
+          <el-input-number v-model="asForm.refund_amount" :min="0" :precision="2" :step="10" />
+          <span class="dim" style="margin-left:8px">元（整单退款可填订单金额 {{ asOrder?.total_amount }}）</span>
+        </el-form-item>
+        <el-form-item label="举证图片">
+          <div class="as-upload">
+            <div v-for="(u, i) in asForm.evidence" :key="i" class="as-img" :style="{ backgroundImage: `url(${u})` }" />
+            <el-upload :show-file-list="false" accept="image/*" :http-request="uploadEvidence" class="as-add">
+              <div class="as-add-box">＋</div>
+            </el-upload>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="asDialog = false">取消</el-button>
+        <el-button type="primary" :loading="asSubmitting" @click="submitAfterSale">提交申请</el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="shipDialog" title="发货（登记物流信息）" width="420px">
       <el-form label-width="80px">
         <el-form-item label="物流公司">
@@ -66,13 +104,23 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { cancelOrder, confirmOrder, listOrders, receiveOrder, registerPay, shipOrder } from '../../api'
+import {
+  applyAfterSale, cancelOrder, confirmOrder, listOrders, receiveOrder,
+  registerPay, shipOrder, uploadImage,
+} from '../../api'
 import { useAuthStore } from '../../stores/auth'
 
 const STATUS = { 1: '待确认', 2: '待发货', 3: '已发货', 4: '已完成', 5: '已取消' }
 const auth = useAuthStore()
+const router = useRouter()
+const isBuyer = computed(() => auth.role === 'buyer')
+const asDialog = ref(false)
+const asOrder = ref(null)
+const asSubmitting = ref(false)
+const asForm = ref({ type: 1, reason: '', refund_amount: 0, evidence: [] })
 const items = ref([])
 const loading = ref(false)
 const status = ref(undefined)
@@ -144,6 +192,30 @@ async function doPay(o) {
   await registerPay(o.id, '')
   ElMessage.success('已登记')
   load()
+}
+
+function openAfterSale(o) {
+  asOrder.value = o
+  asForm.value = { type: 1, reason: '', refund_amount: Number(o.total_amount) || 0, evidence: [] }
+  asDialog.value = true
+}
+
+async function uploadEvidence({ file }) {
+  const r = await uploadImage(file)
+  asForm.value.evidence.push(r.url)
+}
+
+async function submitAfterSale() {
+  if (asForm.value.reason.trim().length < 5) return ElMessage.warning('请填写申请说明（至少 5 字）')
+  asSubmitting.value = true
+  try {
+    const t = await applyAfterSale(asOrder.value.id, asForm.value)
+    ElMessage.success(`已提交售后工单 ${t.ticket_no}，等待卖家响应`)
+    asDialog.value = false
+    router.push('/after-sales')
+  } finally {
+    asSubmitting.value = false
+  }
 }
 
 onMounted(load)

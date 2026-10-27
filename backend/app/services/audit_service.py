@@ -133,7 +133,6 @@ def audit_detail(session: Session, product_id: int) -> dict:
     ]
 
     snap = _snapshot(product)
-    snap = _snapshot(product)
 
     # 行情参考（近 30 天同品种/等级成交）
     from app.repositories.market import MarketRepo

@@ -97,16 +97,21 @@ def l1_check(data: bytes, filename: str) -> tuple[int, dict]:
     return 1, detail
 
 
-def save_image(data: bytes, filename: str, content_type: str = "") -> tuple[object, int, dict]:
-    """保存图片，返回 (StoredObject, l1_status, l1_detail)。"""
+def save_image(data: bytes, filename: str, content_type: str = "",
+               scene: str = "product/images") -> tuple[object, int, dict]:
+    """保存图片，返回 (StoredObject, l1_status, l1_detail)。
+
+    scene 决定存储前缀：商品图 product/images、售后举证 after-sale/evidence 等，
+    便于按场景做生命周期管理与权限控制。
+    """
     status, detail = l1_check(data, filename)
     if status != 1:
         # 校验不通过直接拦截，不落盘，避免占存储
         raise BizError(Err.PARAM_INVALID, detail.get("reason", "图片校验未通过"), detail=detail)
 
-    key = build_key("product/images", filename)
+    key = build_key(scene, filename)
     stored = get_storage().put(data, key, content_type or None)
-    logger.info("图片已上传 key=%s provider=%s size=%d", stored.key, stored.provider, stored.size)
+    logger.info("图片已上传 key=%s provider=%s size=%d scene=%s", stored.key, stored.provider, stored.size, scene)
     return stored, status, detail
 
 

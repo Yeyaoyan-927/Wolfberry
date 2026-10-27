@@ -124,7 +124,8 @@ def audit_logs(
     total = session.scalar(select(func.count()).select_from(AuditLog).where(*conds)) or 0
     rows = session.execute(
         select(AuditLog, Product.title, SysUser.display_name)
-        .join(Product, Product.id == AuditLog.product_id)
+        # 用外连接：商品被清理后，审核记录仍必须可查（留痕不可变相丢失）
+        .outerjoin(Product, Product.id == AuditLog.product_id)
         .join(SysUser, SysUser.id == AuditLog.auditor_id)
         .where(*conds)
         .order_by(AuditLog.id.desc())
@@ -133,7 +134,8 @@ def audit_logs(
     ).all()
     items = [
         {
-            "id": lg.id, "product_id": lg.product_id, "product_title": title,
+            "id": lg.id, "product_id": lg.product_id,
+            "product_title": title or "（商品已删除）",
             "auditor": name, "action": lg.action, "diff_flag": lg.diff_flag,
             "grade_claim": lg.grade_claim, "ai_grade": lg.ai_grade,
             "grade_platform_after": lg.grade_platform_after,

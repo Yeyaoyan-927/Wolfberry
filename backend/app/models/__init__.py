@@ -1,5 +1,6 @@
 """模型统一导出：确保 Base.metadata 收齐所有表。"""
 from app.models.assessment import ProductAssessment
+from app.models.after_sale import AfterSale, AfterSaleLog
 from app.models.audit import AuditLog
 from app.models.base import TimestampMixin
 from app.models.kb import KbChunk, KbDocument
@@ -21,4 +22,6 @@ __all__ = [
     "ProductAssessment",
     "Order",
     "AuditLog",
+    "AfterSale",
+    "AfterSaleLog",
 ]

@@ -13,6 +13,7 @@
           <el-menu-item index="/market">行情中心</el-menu-item>
           <el-menu-item index="/chat">智能问答</el-menu-item>
           <el-menu-item v-if="auth.isLogin" index="/orders">我的订单</el-menu-item>
+          <el-menu-item v-if="auth.isLogin" index="/after-sales">售后服务</el-menu-item>
           <el-menu-item v-if="['seller','admin'].includes(auth.role)" index="/my-products">我的商品</el-menu-item>
           <el-menu-item v-if="['seller','admin'].includes(auth.role)" index="/publish">发布货源</el-menu-item>
         </el-menu>
