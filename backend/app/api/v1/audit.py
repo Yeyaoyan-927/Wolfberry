@@ -21,6 +21,13 @@ def admin_stats(session: DbSession, auditor: AdminUser):
     return ok(jsonable_encoder(stats_service.admin_stats(session)), trace_id=trace)
 
 
+@router.get("/queue-stats")
+def queue_stats(session: DbSession, auditor: AdminUser):
+    """队列条统计：待审 / 今日已审 / 超时。"""
+    trace = new_trace_id()
+    return ok(jsonable_encoder(audit_service.queue_stats(session)), trace_id=trace)
+
+
 @router.get("/queue")
 def audit_queue(
     session: DbSession,

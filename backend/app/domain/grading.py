@@ -90,6 +90,32 @@ def map_grade(
     return GradeResult(grade=grade, confidence_gray=False, reasons=reasons)
 
 
+def rule_hits(*, defect_ratio: float, moldy_ratio: float, impurity_ratio: float,
+              thresholds: dict | None = None) -> list[dict]:
+    """阈值规则命中表（供审核工作台展示判定依据）。
+
+    规则集与需求文档 v4.0 对齐；hit=True 表示违规命中。
+    """
+    th = {**DEFAULT_THRESHOLDS, **(thresholds or {})}
+    return [
+        {"code": "R1", "desc": f"霉变率 ≤ {th['moldy_veto']:.1%}",
+         "hit": moldy_ratio > th["moldy_veto"],
+         "value": f"{moldy_ratio:.2%}"},
+        {"code": "R2", "desc": f"特优综合缺陷率 ≤ {th['teyou_defect']:.1%}",
+         "hit": defect_ratio > th["teyou_defect"],
+         "value": f"{defect_ratio:.2%}"},
+        {"code": "R3", "desc": f"特级综合缺陷率 ≤ {th['teji_defect']:.1%}",
+         "hit": defect_ratio > th["teji_defect"],
+         "value": f"{defect_ratio:.2%}"},
+        {"code": "R4", "desc": "综合缺陷率 ≤ 5%（甲/乙级线）",
+         "hit": defect_ratio > th["jia_defect"],
+         "value": f"{defect_ratio:.2%}"},
+        {"code": "R6", "desc": "杂质率 ≤ 1%",
+         "hit": impurity_ratio > 0.01,
+         "value": f"{impurity_ratio:.2%}"},
+    ]
+
+
 # 差异标记：绿=一致 / 黄=高报1级 / 红=高报≥2级 / 蓝=低报 / 灰=AI不参与
 DIFF_GREEN, DIFF_YELLOW, DIFF_RED, DIFF_BLUE, DIFF_GRAY = "绿", "黄", "红", "蓝", "灰"
 

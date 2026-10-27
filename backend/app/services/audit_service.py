@@ -117,7 +117,7 @@ def audit_detail(session: Session, product_id: int) -> dict:
          "threshold_version": a.threshold_version, "grain_count": a.grain_count,
          "moldy": a.moldy, "bad": a.bad, "oily": a.oily, "impurity": a.impurity,
          "image_confidence": float(a.image_confidence), "valid": bool(a.valid),
-         "exclude_reason": a.exclude_reason}
+         "exclude_reason": a.exclude_reason, "raw": a.raw_result or {}}
         for a in assessments
     ]
 
@@ -133,6 +133,46 @@ def audit_detail(session: Session, product_id: int) -> dict:
     ]
 
     snap = _snapshot(product)
+    snap = _snapshot(product)
+
+    # 行情参考（近 30 天同品种/等级成交）
+    from app.repositories.market import MarketRepo
+
+    market = None
+    try:
+        m_rows = MarketRepo(session).recent_prices(
+            variety=product.variety, grade=product.grade_claim,
+            origin=product.origin if product.origin in ("中宁", "诺木洪", "靖远") else None, days=30,
+        )
+        if m_rows:
+            prices = [float(r.price) for r in m_rows]
+            avg = sum(prices) / len(prices)
+            market = {
+                "samples": len(prices),
+                "avg_30d": round(avg, 2),
+                "deviation_pct": round((float(product.unit_price) - avg) / avg * 100, 1),
+                "low": min(prices), "high": max(prices),
+            }
+    except Exception:
+        logger.warning("行情参考查询失败 product=%s", product.product_no)
+
+    # 命中规则（阈值判定依据）
+    rules = None
+    if product.defect_ratio is not None:
+        from app.domain.grading import rule_hits
+
+        # 杂质率：从评估明细汇总（product 冗余字段未存 impurity）
+        asmt_rows = session.scalars(
+            select(ProductAssessment).where(ProductAssessment.product_id == product_id)
+        ).all()
+        total_grains = sum(a.grain_count for a in asmt_rows) or 1
+        impurity_ratio = sum(a.impurity for a in asmt_rows) / total_grains
+        rules = rule_hits(
+            defect_ratio=float(product.defect_ratio),
+            moldy_ratio=float(product.moldy_ratio or 0),
+            impurity_ratio=impurity_ratio,
+        )
+
     return {
         "id": product.id,
         "product_no": product.product_no,
@@ -150,16 +190,34 @@ def audit_detail(session: Session, product_id: int) -> dict:
         "grain_count": product.grain_count,
         "unit_price": float(product.unit_price),
         "stock": float(product.stock),
+        "min_order_qty": float(product.min_order_qty),
         "status": product.status,
         "description": product.description,
+        "created_at": str(product.created_at) if product.created_at else None,
         "images": images,
         "assessments": assessment_rows,
         "assessing": product.ai_grade is None and product.grain_count is None,
         "diff_flag": snap["diff_flag"],
         "grade_gap": snap["gap"],
+        "market": market,
+        "rules": rules,
         "seller_risk": seller_risk_stats(session, product.seller_id),
         "audit_logs": log_rows,
     }
+
+
+def queue_stats(session: Session) -> dict:
+    """队列条统计：待审核数 / 今日已审 / 30 天内驳回（超时暂无数据，置 0）。"""
+    today = dt.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    pending = session.scalar(
+        select(func.count()).select_from(Product).where(Product.status == STATUS_PENDING)
+    ) or 0
+    audited_today = session.scalar(
+        select(func.count())
+        .select_from(AuditLog)
+        .where(AuditLog.acted_at >= today)
+    ) or 0
+    return {"pending": int(pending), "audited_today": int(audited_today), "overtime": 0}
 
 
 def approve(session: Session, *, auditor: SysUser, product_id: int,

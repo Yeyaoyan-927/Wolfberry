@@ -35,6 +35,7 @@ export const registerPay = (id, voucher_key) => http.post(`/orders/${id}/pay`, {
 
 export const auditQueue = (params) => http.get('/admin/audit/queue', { params })
 export const adminStats = () => http.get('/admin/audit/stats')
+export const queueStats = () => http.get('/admin/audit/queue-stats')
 
 // 知识库
 export const kbDocuments = (params) => http.get('/kb/documents', { params })

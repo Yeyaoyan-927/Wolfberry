@@ -118,17 +118,19 @@ def detect_opencv(data: bytes, image_id: int) -> DetectResult:
         hue_med = float(np.median(roi_h))
 
         n_grain += est
-        detail_boxes.append({"x": cx, "y": cy, "r": r, "v": v_med, "solidity": round(solidity, 3),
-                             "est_grains": est})
-
-        # 类别互斥（霉变 > 坏果 > 油果 > 正常），缺陷按折算粒数累计。
-        # 粘连块（est>1）轮廓失真，不参与坏果形状判定。
+        # 检测框带类别标签（供 AI 标注图叠加展示；伪评估为启发式定位）
+        label = "normal"
         if dark_ratio >= 0.25:
+            label = "moldy"
             n_moldy += est
         elif est == 1 and solidity < 0.62:
+            label = "bad"
             n_bad += 1
         elif 13 < hue_med <= 25 and v_med < 130:
+            label = "oily"
             n_oily += est
+        detail_boxes.append({"x": cx, "y": cy, "r": r, "v": v_med,
+                             "solidity": round(solidity, 3), "est_grains": est, "label": label})
 
     # 图级置信：清晰度为主，亮度适中加分（经验映射，0.4~0.9）
     conf = 0.0 if n_grain == 0 else round(
