@@ -69,6 +69,7 @@ async function onSubmit() {
   try {
     const data = await login(form.username, form.password)
     auth.setAuth(data.access_token, data.user || { username: form.username, role: data.role })
+    ElMessage.closeAll() // 清掉登录前残留的旧提示（如过期会话的 403）
     ElMessage.success('登录成功')
     router.push(route.query.redirect || (auth.role === 'admin' ? '/admin/audit' : '/home'))
   } finally {
