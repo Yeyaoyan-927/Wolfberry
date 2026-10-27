@@ -19,8 +19,17 @@ http.interceptors.response.use(
       if (body.code === 40101) {
         localStorage.removeItem('wb_token')
         localStorage.removeItem('wb_user')
+        sessionStorage.removeItem('wb_token')
+        sessionStorage.removeItem('wb_user')
         if (router.currentRoute.value.name !== 'login') router.push({ name: 'login' })
         return Promise.reject(new Error(body.message || '未登录'))
+      }
+      // 越权访问：送回自己有权限的首页，而不是停在报错页面
+      if (body.code === 40301) {
+        ElMessage.error(body.message || '无权限')
+        const path = router.currentRoute.value.path
+        if (path.startsWith('/admin')) router.push('/home')
+        return Promise.reject(new Error(body.message || '无权限'))
       }
       ElMessage.error(body.message || '请求失败')
       return Promise.reject(new Error(body.message || '请求失败'))

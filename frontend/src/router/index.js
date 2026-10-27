@@ -17,16 +17,15 @@ const routes = [
       { path: '/chat', name: 'chat', component: () => import('../views/web/Chat.vue') },
     ],
   },
-  // ---------- 后台 ----------
+  // ---------- 后台（每个子路由显式声明 admin，不依赖 meta 合并） ----------
   {
     path: '/admin',
     component: () => import('../layouts/AdminLayout.vue'),
-    meta: { admin: true },
     children: [
       { path: '', redirect: '/admin/audit' },
-      { path: 'audit', name: 'admin-audit', component: () => import('../views/admin/AuditQueue.vue') },
-      { path: 'audit/:id', name: 'admin-audit-detail', component: () => import('../views/admin/AuditDetail.vue') },
-      { path: 'products', name: 'admin-products', component: () => import('../views/admin/Products.vue') },
+      { path: 'audit', name: 'admin-audit', component: () => import('../views/admin/AuditQueue.vue'), meta: { admin: true } },
+      { path: 'audit/:id', name: 'admin-audit-detail', component: () => import('../views/admin/AuditDetail.vue'), meta: { admin: true } },
+      { path: 'products', name: 'admin-products', component: () => import('../views/admin/Products.vue'), meta: { admin: true } },
     ],
   },
   { path: '/:pathMatch(.*)*', redirect: '/' },
@@ -44,8 +43,9 @@ router.beforeEach((to) => {
   if (to.name === 'login' && auth.isLogin) {
     return auth.role === 'admin' ? '/admin/audit' : '/home'
   }
-  if (to.meta.admin && auth.role !== 'admin') return '/home'
-  if (to.meta.seller && !['seller', 'admin'].includes(auth.role)) return '/home'
+  // 管理端：用 matched 链判断，任何一层声明 admin 即生效
+  if (to.matched.some((r) => r.meta.admin) && auth.role !== 'admin') return '/home'
+  if (to.matched.some((r) => r.meta.seller) && !['seller', 'admin'].includes(auth.role)) return '/home'
   return true
 })
 
