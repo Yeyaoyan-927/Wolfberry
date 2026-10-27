@@ -20,6 +20,7 @@ class Candidate:
     section_path: str
     content: str
     score: float
+    context: str = ""      # 所属章节路径链（small-to-big：命中片段时一并给出上下文）
 
 
 def _bigrams(text: str) -> set[str]:

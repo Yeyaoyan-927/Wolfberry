@@ -28,8 +28,13 @@ def market_summary(
     grade: str = Query("特级"),
     days: int = Query(30, ge=7, le=180),
 ):
-    """按日聚合的成交价序列 + 汇总（趋势图数据源）。"""
-    rows = MarketRepo(session).recent_prices(variety=variety, grade=grade, days=days)
+    """按日聚合的成交价序列 + 汇总（趋势图数据源）。
+
+    同时返回 availability（实际有成交数据的维度组合），前端据此渲染下拉，
+    避免用户选到空组合后只看到一张空白图。
+    """
+    repo = MarketRepo(session)
+    rows = repo.recent_prices(variety=variety, grade=grade, days=days)
     buckets: dict[str, list[float]] = defaultdict(list)
     for r in rows:
         buckets[str(r.stat_date)].append(float(r.price))
@@ -53,13 +58,23 @@ def market_summary(
             "low": round(min(prices), 2),
             "high": round(max(prices), 2),
             "samples": len(prices),
-            # 最近 7 天均值 vs 前 7 天均值 → 涨跌
+            # 最近 3 日均值 vs 前序均值 → 涨跌
             "trend_pct": _trend(points),
         }
+
+    availability = repo.availability(days=days)
+    suggestion = None
+    if not points:
+        # 当前维度无数据：给出同品种其他等级，或样本最多的组合
+        same = [a for a in availability if a["variety"] == variety and a["grade"] != grade]
+        suggestion = (same[0] if same else (availability[0] if availability else None))
+
     return ok({
         "variety": variety, "grade": grade, "days": days,
         "points": points, "summary": summary,
         "options": {"varieties": list(VARIETIES), "grades": list(GRADES), "origins": list(ORIGINS)},
+        "availability": availability,
+        "suggestion": suggestion,
     }, trace_id=new_trace_id())
 
 

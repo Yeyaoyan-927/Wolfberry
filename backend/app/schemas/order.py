@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 
 class OrderCreateIn(BaseModel):
@@ -51,3 +51,8 @@ class OrderOut(BaseModel):
     confirmed_at: object = None
     shipped_at: object = None
     completed_at: object = None
+
+    @field_serializer("unit_price", "quantity", "total_amount")
+    def _decimal_to_float(self, value: Decimal | None) -> float | None:
+        """避免 Decimal 序列化成 '100.000'，前端直接显示为 100。"""
+        return None if value is None else float(value)

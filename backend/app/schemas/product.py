@@ -3,9 +3,14 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
 GRADES = ("特优", "特级", "甲级", "乙级", "等外")
+
+
+def _num(value: Decimal | None) -> float | None:
+    """数值统一转 float 输出：避免 Decimal 被序列化成 '100.000' 字符串。"""
+    return None if value is None else float(value)
 
 
 class ProductCreateIn(BaseModel):
@@ -65,6 +70,10 @@ class ProductOut(BaseModel):
     images: list[ImageOut] = []
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("unit_price", "stock", "min_order_qty")
+    def _decimal_to_float(self, value: Decimal | None) -> float | None:
+        return _num(value)
 
 
 class UploadOut(BaseModel):

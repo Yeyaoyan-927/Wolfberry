@@ -78,6 +78,7 @@ def upsert(items: list[dict]) -> int:
                     "doc_type": it.get("doc_type") or "",
                     "doc_title": it.get("doc_title") or "",
                     "section_path": it.get("section_path") or "",
+                    "context": it.get("context") or "",
                 }
                 for it in items
             ],
@@ -116,6 +117,7 @@ def query(embedding: list[float], *, top_k: int = 5, doc_type: str | None = None
                 "doc_id": res["metadatas"][0][i].get("doc_id"),
                 "doc_title": res["metadatas"][0][i].get("doc_title", ""),
                 "section_path": res["metadatas"][0][i].get("section_path", ""),
+                "context": res["metadatas"][0][i].get("context", ""),
                 "content": res["documents"][0][i],
                 "score": 1.0 - float(res["distances"][0][i]),
             }

@@ -34,6 +34,9 @@ class KbDocument(Base, TimestampMixin):
 
     status: Mapped[int] = mapped_column(Integer, default=DOC_PENDING, nullable=False)
     chunk_strategy: Mapped[str] = mapped_column(String(16), default="auto", nullable=False)
+    # 切分参数随文档持久化：重切/复现问题时要能知道当初用的什么参数
+    chunk_size: Mapped[int] = mapped_column(Integer, default=500, nullable=False)
+    chunk_overlap: Mapped[int] = mapped_column(Integer, default=80, nullable=False)
     chunk_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     char_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     error_msg: Mapped[str] = mapped_column(String(500), default="", nullable=False)

@@ -111,11 +111,21 @@ def main() -> None:
 
         assessment_service.run_assessment(pid)  # 真实评估，替代旧预置
 
+        # 上架必须带平台认定等级（真实路径由审核员 approve 写入）。
+        # 种子脚本走的是"模拟审核通过"，这里补齐规则，避免出现「在售但认定等级为空」。
+        session = SessionLocal()
+        product_row = ProductRepo(session).detail(pid)
+        if not product_row.grade_platform:
+            product_row.grade_platform = product_row.ai_grade or product_row.grade_claim
+        session.commit()
+        session.close()
+
         session = SessionLocal()
         product_row = ProductRepo(session).detail(pid)
         print(
             f"  商品 {product_row.product_no}：{product_row.title[:22]}"
             f"  自述 {product_row.grade_claim} / AI {product_row.ai_grade or '灰(不参与)'}"
+            f" / 认定 {product_row.grade_platform}"
             f"  缺陷率 {product_row.defect_ratio}"
         )
         session.close()

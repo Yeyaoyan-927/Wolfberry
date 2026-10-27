@@ -24,6 +24,7 @@ def search(session: Session, query: str, *, top_k: int | None = None, doc_type: 
                 doc_id=h.doc_id,
                 doc_title=h.doc_title,
                 section_path=h.section_path,
+                context=h.context,
                 content=h.content,
                 score=round(h.score, 4),
             )

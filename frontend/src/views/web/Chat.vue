@@ -10,7 +10,36 @@
       <div class="main">
         <div class="msgs" ref="msgsEl">
           <div v-for="(m, i) in msgs" :key="i" class="msg" :class="m.role">
-            <div class="bubble">
+            <!-- 执行过程：只在 AI 回答上显示，随流式事件实时刷新 -->
+            <div v-if="m.role === 'ai' && m.flow?.length" class="flow" :class="{ done: !m.running }">
+              <div class="f-head" @click="m.collapsed = !m.collapsed">
+                <span class="f-title">
+                  执行过程
+                  <template v-if="m.running"><span class="dots"></span></template>
+                  <template v-else>· {{ m.flow.length }} 步 · {{ fmtMs(m.elapsed) }}</template>
+                </span>
+                <span class="f-toggle">{{ m.collapsed ? '展开' : '收起' }}</span>
+              </div>
+              <template v-if="!m.collapsed">
+                <div v-for="(s, si) in m.flow" :key="si" class="f-step" :class="s.status">
+                  <span class="f-ico">
+                    <span v-if="s.status === 'running'" class="spin"></span>
+                    <span v-else class="tick">✓</span>
+                  </span>
+                  <span class="f-name">{{ s.order }}. {{ s.title }}</span>
+                  <span v-if="s.elapsed_ms != null" class="f-ms num">{{ fmtMs(s.elapsed_ms) }}</span>
+                  <span v-else-if="s.status === 'running'" class="f-ms running-txt">进行中</span>
+                  <div v-if="s.detail" class="f-detail">{{ s.detail }}</div>
+                  <div v-for="(t, ti) in (s.extra?.tools || [])" :key="ti" class="f-tool"
+                       :class="{ fail: !t.ok }">
+                    <span class="t-ico">{{ t.ok ? '✓' : '✕' }}</span>
+                    <b>{{ t.tool }}</b> · {{ t.summary }}
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <div v-if="m.html || m.role === 'user'" class="bubble">
               <div v-if="m.role === 'ai'" class="answer" v-html="m.html"></div>
               <template v-else>{{ m.text }}</template>
             </div>
@@ -19,7 +48,6 @@
                     :title="c.text?.slice(0, 120)">[{{ c.no }}] {{ c.title || c.doc_title || '知识条目' }}</span>
             </div>
           </div>
-          <div v-if="pending" class="msg ai"><div class="bubble typing">AI 正在检索知识与数据<span class="dots"></span></div></div>
         </div>
         <div class="input">
           <el-input v-model="text" size="large" placeholder="例如：特优和特级差在哪？中宁枸杞现在什么价？"
@@ -59,8 +87,11 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref } from 'vue'
-import { kbAsk } from '../../api'
+import { computed, nextTick, onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { kbAskStream } from '../../api'
+
+const route = useRoute()
 
 const samples = [
   '特优和特级差在哪？',
@@ -106,24 +137,72 @@ async function send() {
   text.value = ''
   msgs.value.push({ role: 'user', text: q })
   pending.value = true
+
+  // AI 消息先占位：流程会随 SSE 事件逐条填充，用户不用干等
+  const msg = reactive({
+    role: 'ai',
+    html: '',
+    citations: [],
+    steps: [],
+    flow: [],
+    running: true,
+    collapsed: false,
+    intent: '',
+    tools_used: [],
+    elapsed_ms: 0,
+  })
+  msgs.value.push(msg)
   scrollBottom()
+
   try {
-    const data = await kbAsk(q)
-    msgs.value.push({
-      role: 'ai',
-      html: render(data.answer || '（无回答）'),
-      citations: data.citations || [],
-      steps: data.steps || [],
-      intent: data.intent,
-      tools_used: data.tools_used || [],
-      elapsed_ms: data.elapsed_ms,
+    await kbAskStream(q, (event, data) => {
+      if (event === 'step') {
+        const idx = msg.flow.findIndex((s) => s.node === data.node)
+        if (idx >= 0) {
+          // 同一节点从 running 变 done：原地更新，不重复堆叠
+          Object.assign(msg.flow[idx], data)
+        } else {
+          msg.flow.push({ ...data })
+        }
+        scrollBottom()
+      } else if (event === 'done') {
+        msg.html = render(data.answer || '（无回答）')
+        msg.citations = data.citations || []
+        msg.steps = data.steps || []
+        msg.intent = data.intent
+        msg.tools_used = data.tools_used || []
+        msg.elapsed_ms = data.elapsed_ms
+        msg.running = false
+        scrollBottom()
+      } else if (event === 'error') {
+        msg.html = `抱歉，问答服务暂时不可用：${data.message || '未知错误'}`
+        msg.running = false
+      }
     })
-  } catch {
-    msgs.value.push({ role: 'ai', html: '抱歉，问答服务暂时不可用，请稍后重试。' })
+  } catch (e) {
+    msg.html = `抱歉，问答服务暂时不可用（${e.message || e}）`
+    msg.running = false
   } finally {
     pending.value = false
     scrollBottom()
   }
+}
+
+onMounted(() => {
+  // /chat?q=xxx 直接发起提问，便于分享结论与自动化验证
+  const q = String(route.query.q || '').trim()
+  if (q) ask(q)
+})
+
+onMounted(() => {
+  // /chat?q=xxx 直接发起提问，便于分享结论与自动化验证
+  const q = String(route.query.q || '').trim()
+  if (q) ask(q)
+})
+
+function fmtMs(ms) {
+  if (ms == null) return ''
+  return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms}ms`
 }
 </script>
 
@@ -131,7 +210,7 @@ async function send() {
 .chat-page { display: flex; justify-content: center; }
 .chat { width: min(1280px, 100%); height: min(680px, calc(100vh - 150px)); margin: 20px auto;
   display: grid; grid-template-columns: 230px minmax(0, 1fr) 290px; overflow: hidden; }
-.side { border-right: 1px solid var(--line); padding: 18px 16px; background: linear-gradient(180deg, #fff, var(--brand-soft)); }
+.side { border-right: 1px solid var(--line); padding: 18px 16px; background: #fff; }
 .s-head { font-weight: 800; font-size: 16px; }
 .s-sub { font-size: 11.5px; color: var(--ink-3); margin: 6px 0 16px; }
 .sample { font-size: 12.5px; background: #fff; border: 1px solid var(--brand-line); color: var(--ink-2);
@@ -148,7 +227,30 @@ async function send() {
 .cites { max-width: 78%; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .cite { font-size: 11px; color: var(--ink-3); background: #fff; border: 1px solid var(--line);
   border-radius: 4px; padding: 2px 6px; cursor: default; }
-.typing::after { content: ""; }
+.flow { width: 100%; max-width: 100%; background: #fff; border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+.flow.done { background: #fcfaf9; }
+.f-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.f-title { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+.f-toggle { font-size: 11px; color: var(--ink-4); }
+.f-step { display: grid; grid-template-columns: 16px auto 1fr; gap: 6px 4px;
+  padding: 6px 0 2px; border-top: 1px dashed var(--line); margin-top: 6px; }
+.f-step.running .f-name { color: var(--brand); font-weight: 600; }
+.f-ico { display: flex; align-items: center; justify-content: center; height: 18px; }
+.tick { color: #1d8a4e; font-size: 12px; font-weight: 700; }
+.spin { width: 10px; height: 10px; border: 2px solid var(--brand-line); border-top-color: var(--brand);
+  border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.f-name { font-size: 12px; color: var(--ink-1); grid-column: 2; }
+.f-ms { font-size: 11px; color: var(--ink-4); grid-column: 3; text-align: right; }
+.running-txt { color: var(--brand); }
+.f-detail { grid-column: 2 / 4; font-size: 11.5px; color: var(--ink-3); line-height: 1.6;
+  word-break: break-all; }
+.f-tool { grid-column: 2 / 4; font-size: 11px; color: var(--ink-2); background: #fff;
+  border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; margin-top: 4px; }
+.f-tool.fail { border-color: #f0c9c2; background: #fdf4f2; color: var(--brand); }
+.t-ico { color: #1d8a4e; margin-right: 4px; }
+.f-tool.fail .t-ico { color: var(--brand); }
 .dots::after { content: "…"; animation: blink 1s infinite; }
 @keyframes blink { 50% { opacity: .2; } }
 .input { display: flex; gap: 10px; padding: 12px 18px; background: #fff; border-top: 1px solid var(--line); }

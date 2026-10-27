@@ -37,7 +37,7 @@ def _search_chroma(query_vec: list[float], query_text: str, *, top_k: int,
             Candidate(
                 chunk_id=r["chunk_id"], doc_id=r["doc_id"] or 0,
                 doc_title=r["doc_title"], section_path=r["section_path"],
-                content=r["content"], score=r["score"],
+                content=r["content"], score=r["score"], context=r.get("context", ""),
             )
             for r in raw
         ]

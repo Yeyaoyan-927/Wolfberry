@@ -6,16 +6,19 @@
     </div>
 
     <div class="filter card">
-      <el-select v-model="variety" style="width: 140px" @change="load">
-        <el-option v-for="v in opts.varieties" :key="v" :label="v" :value="v" />
+      <el-select v-model="variety" style="width: 140px" @change="onVarietyChange">
+        <el-option v-for="v in varieties" :key="v" :label="v" :value="v" />
       </el-select>
       <el-radio-group v-model="grade" @change="load">
-        <el-radio-button v-for="g in opts.grades" :key="g" :value="g">{{ g }}</el-radio-button>
+        <el-radio-button v-for="g in grades" :key="g" :value="g">{{ g }}</el-radio-button>
       </el-radio-group>
       <el-radio-group v-model="days" @change="load">
         <el-radio-button :value="30">近 30 天</el-radio-button>
         <el-radio-button :value="90">近 90 天</el-radio-button>
       </el-radio-group>
+      <span class="dim hint">
+        共 {{ availability.length }} 个有成交的维度组合
+      </span>
     </div>
 
     <el-row :gutter="14" v-loading="loading">
@@ -46,7 +49,11 @@
                 <title>{{ p.date }} ¥{{ p.avg }}（{{ p.count }} 样）</title>
               </circle>
             </svg>
-            <el-empty v-else description="该维度暂无成交数据" :image-size="70" />
+            <el-empty v-else :image-size="70" description="该维度暂无成交数据">
+              <el-button v-if="suggestion" type="primary" plain size="small" @click="applySuggestion">
+                改看「{{ suggestion.variety }} · {{ suggestion.grade }}」（{{ suggestion.samples }} 个样本）
+              </el-button>
+            </el-empty>
           </div>
           <div class="axis">
             <span v-for="(p, i) in points" :key="'ax' + i" class="ax-item">{{ p.date.slice(5) }}</span>
@@ -102,13 +109,37 @@ import { marketSummary } from '../../api'
 
 const W = 760
 const H = 260
-const opts = ref({ varieties: [], grades: [], origins: [] })
+const availability = ref([])   // 有成交数据的维度组合（后端返回）
+const suggestion = ref(null)   // 当前维度空数据时的替代建议
 const variety = ref('宁杞5号')
 const grade = ref('特级')
 const days = ref(30)
 const points = ref([])
 const summary = ref(null)
 const loading = ref(false)
+
+// 下拉只展示"确实有成交"的品种/等级，避免用户选中空组合
+const varieties = computed(() => {
+  const fromData = [...new Set(availability.value.map((a) => a.variety))]
+  return fromData.length ? fromData : ['宁杞5号', '宁杞7号', '大麻叶']
+})
+const grades = computed(() => {
+  const byVariety = availability.value.filter((a) => a.variety === variety.value).map((a) => a.grade)
+  return byVariety.length ? byVariety : ['特优', '特级', '甲级']
+})
+
+function onVarietyChange() {
+  // 切品种后若当前等级该品种没有数据，自动落到第一个有数据的等级
+  if (!grades.value.includes(grade.value)) grade.value = grades.value[0]
+  load()
+}
+
+function applySuggestion() {
+  if (!suggestion.value) return
+  variety.value = suggestion.value.variety
+  grade.value = suggestion.value.grade
+  load()
+}
 
 const minV = computed(() => Math.min(...points.value.map((p) => p.low), Infinity))
 const maxV = computed(() => Math.max(...points.value.map((p) => p.high), -Infinity))
@@ -134,11 +165,13 @@ async function load() {
   loading.value = true
   try {
     const d = await marketSummary({ variety: variety.value, grade: grade.value, days: days.value })
-    points.value = d.points
-    summary.value = d.summary
-    opts.value = d.options
-    if (!variety.value) variety.value = '宁杞5号'
-    if (!grade.value) grade.value = '特级'
+    points.value = d.points || []
+    summary.value = d.summary || null
+    availability.value = d.availability || []
+    suggestion.value = d.suggestion || null
+  } catch {
+    points.value = []
+    summary.value = null
   } finally {
     loading.value = false
   }
@@ -152,6 +185,7 @@ onMounted(load)
 .head h2 { margin: 0; font-size: 18px; }
 .dim { font-size: 12.5px; color: var(--ink-3); }
 .filter { display: flex; gap: 14px; align-items: center; padding: 12px 16px; margin-bottom: 14px; flex-wrap: wrap; }
+.hint { margin-left: auto; }
 .block { padding: 16px 20px; }
 .between { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
 .chart-wrap { height: 260px; }

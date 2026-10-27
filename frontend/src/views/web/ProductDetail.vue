@@ -20,11 +20,11 @@
       <div class="info card">
         <h1>{{ p.title }}</h1>
         <div class="claim">
-          <GradeTag :grade="p.grade_platform || p.grade_claim" />
           <span class="dim">卖家自述</span>
           <GradeTag :grade="p.grade_claim" />
           <template v-if="p.grade_platform">
-            <span class="dim">→ 平台认定</span>
+            <span class="arrow">→</span>
+            <span class="dim">平台认定</span>
             <GradeTag :grade="p.grade_platform" />
           </template>
           <DiffFlag :flag="flag" :gap="p.grade_diff" />
@@ -73,8 +73,10 @@
             <div><b>{{ p.grain_count ?? '—' }}</b><span>识别粒数</span></div>
             <div><b>{{ p.ai_confidence ?? '—' }}</b><span>加权置信度</span></div>
           </div>
-          <el-alert type="info" :closable="false" show-icon
-                    title="评估为平台审核依据，快照已留痕" description="仅外观筛查，不检测硫/水分/多糖等内在品质；疑似问题请人工复核或送第三方检测。" />
+          <div class="a-note">
+            <b>评估为平台审核依据，快照已留痕</b>
+            仅外观筛查，不检测硫 / 水分 / 多糖等内在品质；疑似问题请人工复核或送第三方检测。
+          </div>
         </template>
         <el-empty v-else :image-size="70" description="AI 评估中 / 未评估，可正常下单，评估完成后展示" />
       </div>
@@ -169,6 +171,14 @@ onMounted(async () => {
 .info { padding: 22px 24px; }
 .info h1 { margin: 0 0 12px; font-size: 20px; line-height: 1.5; }
 .claim { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.claim .arrow { color: var(--ink-4); }
+.a-note { background: #f8f4f1; border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 11px; font-size: 11.5px; line-height: 1.7; color: var(--ink-3); }
+.a-note b { display: block; color: var(--ink-2); font-size: 12px; margin-bottom: 2px; }
+.claim .arrow { color: var(--ink-4); }
+.a-note { background: #f8f4f1; border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 11px; font-size: 11.5px; line-height: 1.7; color: var(--ink-3); }
+.a-note b { display: block; color: var(--ink-2); font-size: 12px; margin-bottom: 2px; }
 .dim { font-size: 12px; color: var(--ink-3); }
 .price-row { display: flex; align-items: baseline; gap: 6px; background: var(--brand-soft);
   border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }

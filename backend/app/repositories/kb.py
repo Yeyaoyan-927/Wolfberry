@@ -46,10 +46,15 @@ class KbRepo(BaseRepo[KbDocument]):
         ).all()
         return rows, total
 
-    def mark_indexed(self, doc: KbDocument, *, chunk_count: int, char_count: int) -> None:
+    def mark_indexed(
+        self, doc: KbDocument, *, chunk_count: int, char_count: int, strategy: str | None = None
+    ) -> None:
         doc.status = 2
         doc.chunk_count = chunk_count
         doc.char_count = char_count
+        # auto 策略会被解析成具体策略（md/clause/qa/recursive），回写便于运营判断
+        if strategy:
+            doc.chunk_strategy = strategy
         doc.error_msg = ""
         doc.indexed_at = dt.datetime.now()
         self.session.flush()

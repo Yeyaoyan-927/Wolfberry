@@ -5,7 +5,7 @@ import datetime as dt
 from decimal import Decimal
 from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.models.product import MarketQuote
 from app.repositories.base import BaseRepo
@@ -54,3 +54,30 @@ class MarketRepo(BaseRepo[MarketQuote]):
         if not rows:
             return None
         return sum((r.price for r in rows), Decimal("0")) / len(rows)
+
+    def availability(self, *, days: int = 30) -> list[dict]:
+        """有成交数据的维度组合 + 样本量，供前端渲染下拉与空数据兜底。
+
+        按样本量降序：样本越多的组合代表性越强，作为默认推荐。
+        """
+        since = dt.date.today() - dt.timedelta(days=days)
+        rows = self.session.execute(
+            select(
+                MarketQuote.variety,
+                MarketQuote.grade,
+                func.count(MarketQuote.id).label("n"),
+                func.avg(MarketQuote.price).label("avg_price"),
+            )
+            .where(MarketQuote.quote_type == "deal", MarketQuote.stat_date >= since)
+            .group_by(MarketQuote.variety, MarketQuote.grade)
+            .order_by(func.count(MarketQuote.id).desc())
+        ).all()
+        return [
+            {
+                "variety": v,
+                "grade": g,
+                "samples": int(n),
+                "avg_price": round(float(p), 2),
+            }
+            for v, g, n, p in rows
+        ]

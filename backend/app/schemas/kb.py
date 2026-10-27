@@ -14,6 +14,8 @@ class DocOut(BaseModel):
     size: int
     status: int
     chunk_strategy: str
+    chunk_size: int = 500
+    chunk_overlap: int = 80
     chunk_count: int
     char_count: int
     error_msg: str = ""
@@ -44,6 +46,7 @@ class SearchHit(BaseModel):
     doc_id: int
     doc_title: str
     section_path: str
+    context: str = ""
     content: str
     score: float
 
