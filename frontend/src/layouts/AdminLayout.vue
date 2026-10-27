@@ -16,16 +16,17 @@
         <el-menu-item index="/admin/products">
           <el-icon><Goods /></el-icon>商品管理
         </el-menu-item>
-        <el-divider style="border-color:#4a382b" />
-        <el-menu-item index="/">
-          <el-icon><Position /></el-icon>返回交易端
-        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
       <el-header class="admin-top" height="56px">
         <div class="crumb">{{ pageTitle }}</div>
-        <div class="who">{{ auth.displayName }}（管理员）</div>
+        <div class="right">
+          <span class="who">{{ auth.displayName }}（管理员）</span>
+          <el-button size="small" plain @click="onLogout">
+            <el-icon style="margin-right:4px"><SwitchButton /></el-icon>退出
+          </el-button>
+        </div>
       </el-header>
       <el-main class="admin-main">
         <router-view />
@@ -36,13 +37,19 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const auth = useAuthStore()
 const route = useRoute()
+const router = useRouter()
 const active = computed(() => '/admin/' + (route.path.split('/')[2] || 'audit').split('/')[0])
 const pageTitle = computed(() => ({ audit: '审核工作台', products: '商品管理' }[active.value.split('/')[2]] || '运营后台'))
+
+function onLogout() {
+  auth.logout()
+  router.push('/')
+}
 </script>
 
 <style scoped>

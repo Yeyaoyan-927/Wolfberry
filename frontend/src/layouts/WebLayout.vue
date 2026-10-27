@@ -2,13 +2,13 @@
   <el-container class="web-shell">
     <el-header class="topbar" height="60px">
       <div class="topbar-inner">
-        <router-link to="/" class="logo">
+        <router-link to="/home" class="logo">
           <span class="berry"></span>
           <span class="logo-name">杞市</span>
           <span class="logo-sub">枸杞交易平台</span>
         </router-link>
         <el-menu mode="horizontal" :default-active="active" class="nav" router>
-          <el-menu-item index="/">首页</el-menu-item>
+          <el-menu-item index="/home">首页</el-menu-item>
           <el-menu-item index="/products">货源市场</el-menu-item>
           <el-menu-item index="/chat">智能问答</el-menu-item>
           <el-menu-item v-if="auth.isLogin" index="/orders">我的订单</el-menu-item>
@@ -21,7 +21,6 @@
             <span class="who">{{ auth.displayName }}</span>
             <el-button link @click="onLogout">退出</el-button>
           </template>
-          <el-button v-else type="primary" round @click="$router.push('/login')">登录</el-button>
         </div>
       </div>
     </el-header>

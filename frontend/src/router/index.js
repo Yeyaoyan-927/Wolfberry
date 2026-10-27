@@ -2,25 +2,26 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
-  { path: '/login', name: 'login', component: () => import('../views/Login.vue'), meta: { bare: true } },
-  // ---------- 交易端 ----------
+  // 根路径即登录页（未登录的唯一入口）
+  { path: '/', name: 'login', component: () => import('../views/Login.vue'), meta: { bare: true } },
+  // ---------- 交易端（子路由用绝对路径，URL 保持 /products 等短形式） ----------
   {
-    path: '/',
+    path: '/home',
     component: () => import('../layouts/WebLayout.vue'),
     children: [
-      { path: '', name: 'home', component: () => import('../views/web/Home.vue') },
-      { path: 'products', name: 'products', component: () => import('../views/web/Products.vue') },
-      { path: 'products/:id', name: 'product-detail', component: () => import('../views/web/ProductDetail.vue') },
-      { path: 'orders', name: 'orders', component: () => import('../views/web/Orders.vue'), meta: { auth: true } },
-      { path: 'publish', name: 'publish', component: () => import('../views/web/Publish.vue'), meta: { auth: true, seller: true } },
-      { path: 'chat', name: 'chat', component: () => import('../views/web/Chat.vue'), meta: { auth: true } },
+      { path: '/home', name: 'home', component: () => import('../views/web/Home.vue') },
+      { path: '/products', name: 'products', component: () => import('../views/web/Products.vue') },
+      { path: '/products/:id', name: 'product-detail', component: () => import('../views/web/ProductDetail.vue') },
+      { path: '/orders', name: 'orders', component: () => import('../views/web/Orders.vue') },
+      { path: '/publish', name: 'publish', component: () => import('../views/web/Publish.vue'), meta: { seller: true } },
+      { path: '/chat', name: 'chat', component: () => import('../views/web/Chat.vue') },
     ],
   },
   // ---------- 后台 ----------
   {
     path: '/admin',
     component: () => import('../layouts/AdminLayout.vue'),
-    meta: { auth: true, admin: true },
+    meta: { admin: true },
     children: [
       { path: '', redirect: '/admin/audit' },
       { path: 'audit', name: 'admin-audit', component: () => import('../views/admin/AuditQueue.vue') },
@@ -35,16 +36,16 @@ const router = createRouter({ history: createWebHistory(), routes })
 
 router.beforeEach((to) => {
   const auth = useAuthStore()
-  // 全局守卫：未登录只能访问登录页（应用入口即登录页）
+  // 未登录：一律回根路径登录页
   if (to.name !== 'login' && !auth.isLogin) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
-  // 已登录访问登录页 → 直接进系统
+  // 已登录访问登录页 → 按角色进系统
   if (to.name === 'login' && auth.isLogin) {
-    return auth.role === 'admin' ? '/admin/audit' : '/'
+    return auth.role === 'admin' ? '/admin/audit' : '/home'
   }
-  if (to.meta.admin && auth.role !== 'admin') return { name: 'home' }
-  if (to.meta.seller && !['seller', 'admin'].includes(auth.role)) return { name: 'home' }
+  if (to.meta.admin && auth.role !== 'admin') return '/home'
+  if (to.meta.seller && !['seller', 'admin'].includes(auth.role)) return '/home'
   return true
 })
 

@@ -70,7 +70,7 @@ async function onSubmit() {
     const data = await login(form.username, form.password)
     auth.setAuth(data.access_token, data.user || { username: form.username, role: data.role })
     ElMessage.success('登录成功')
-    router.push(route.query.redirect || (auth.role === 'admin' ? '/admin/audit' : '/'))
+    router.push(route.query.redirect || (auth.role === 'admin' ? '/admin/audit' : '/home'))
   } finally {
     loading.value = false
   }

@@ -1,7 +1,7 @@
 <template>
   <div class="page" v-loading="loading">
     <el-breadcrumb class="crumb">
-      <el-breadcrumb-item to="/">首页</el-breadcrumb-item>
+      <el-breadcrumb-item to="/home">首页</el-breadcrumb-item>
       <el-breadcrumb-item to="/products">货源市场</el-breadcrumb-item>
       <el-breadcrumb-item>{{ p.title || '商品详情' }}</el-breadcrumb-item>
     </el-breadcrumb>

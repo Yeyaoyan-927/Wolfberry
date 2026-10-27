@@ -1,9 +1,12 @@
 import { defineStore } from 'pinia'
 
+// 登录态存 sessionStorage：新开标签页/重启浏览器即失效，入口永远是登录页
+const store = sessionStorage
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    token: localStorage.getItem('wb_token') || '',
-    user: JSON.parse(localStorage.getItem('wb_user') || 'null'),
+    token: store.getItem('wb_token') || '',
+    user: JSON.parse(store.getItem('wb_user') || 'null'),
   }),
   getters: {
     isLogin: (s) => !!s.token,
@@ -14,14 +17,14 @@ export const useAuthStore = defineStore('auth', {
     setAuth(token, user) {
       this.token = token
       this.user = user
-      localStorage.setItem('wb_token', token)
-      localStorage.setItem('wb_user', JSON.stringify(user))
+      store.setItem('wb_token', token)
+      store.setItem('wb_user', JSON.stringify(user))
     },
     logout() {
       this.token = ''
       this.user = null
-      localStorage.removeItem('wb_token')
-      localStorage.removeItem('wb_user')
+      store.removeItem('wb_token')
+      store.removeItem('wb_user')
     },
   },
 })
