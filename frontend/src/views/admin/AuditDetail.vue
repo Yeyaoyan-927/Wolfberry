@@ -15,21 +15,46 @@
     </div>
 
     <div class="grid">
-      <!-- 商品 + 图片 -->
+      <!-- 左：商品信息 -->
       <div class="card block">
         <h3>{{ d.title }}</h3>
         <div class="meta dim num">{{ d.product_no }} · {{ d.variety }} / {{ d.origin }} · {{ d.spec_per_50g }}粒/50g · ¥{{ d.unit_price }}/kg · 库存 {{ d.stock }}kg</div>
         <div class="desc">{{ d.description }}</div>
-        <el-divider>实拍图（{{ d.images?.length || 0 }}）</el-divider>
-        <div class="imgs">
-          <div v-for="im in d.images" :key="im.id" class="img" :style="`background-image:url('${im.url}')`">
-            <el-tag size="small" :type="im.l1_status === 1 ? 'success' : 'danger'">{{ im.l1_status === 1 ? 'L1过' : '拦截' }}</el-tag>
-          </div>
+        <el-divider>卖家风险画像</el-divider>
+        <div class="risk num" v-if="d.seller_risk">
+          <div class="risk-row"><span>30 天红标</span><b :class="{ bad: d.seller_risk.risk_warn }">{{ d.seller_risk.red_flags_30d }} 次</b></div>
+          <div class="risk-row"><span>累计驳回</span><b>{{ d.seller_risk.rejected_total }}</b></div>
+          <div class="risk-row"><span>历史提交</span><b>{{ d.seller_risk.products_total }}</b></div>
+          <el-tag v-if="d.seller_risk.risk_warn" type="danger" size="small">账号预警</el-tag>
         </div>
+        <el-divider>审核记录（不可删除）</el-divider>
+        <el-timeline v-if="d.audit_logs?.length" class="mini-logs">
+          <el-timeline-item v-for="lg in d.audit_logs" :key="lg.id"
+                            :timestamp="(lg.acted_at || '').replace('T', ' ').slice(0, 16)"
+                            :type="{ approve: 'success', grade: 'primary', reject: 'danger' }[lg.action]">
+            <b>{{ { approve: '通过', grade: '改级上架', reject: '驳回' }[lg.action] }}</b>
+            → 认定 <GradeTag :grade="lg.grade_platform_after || '—'" />
+            <div class="dim">{{ lg.reason }}</div>
+          </el-timeline-item>
+        </el-timeline>
+        <el-empty v-else :image-size="50" description="暂无审核记录" />
       </div>
 
-      <!-- AI 评估 -->
+      <!-- 中：图片墙 -->
       <div class="card block">
+        <div class="sec-head"><b>实拍图（{{ d.images?.length || 0 }}）</b></div>
+        <div class="imgs">
+          <el-image v-for="im in d.images" :key="im.id" class="img" fit="cover"
+                    :src="im.url" :preview-src-list="d.images.map((x) => x.url)"
+                    :initial-index="d.images.indexOf(im)" preview-teleported hide-on-click-modal>
+            <template #error><div class="img-err">加载失败</div></template>
+          </el-image>
+        </div>
+        <div class="l1-note dim">L1 门禁：格式 / 大小 / 短边 ≥800px，不通过的上传时已拦截</div>
+      </div>
+
+      <!-- 右：AI 评估 + 操作 -->
+      <div class="card block assess-col">
         <div class="sec-head"><span class="berry"></span><b>AI 评估</b>
           <DiffFlag v-if="d.diff_flag" :flag="d.diff_flag" />
           <el-button v-if="d.status === 1" size="small" plain style="margin-left:auto" @click="reassess">重新评估</el-button>
@@ -69,44 +94,38 @@
           </div>
         </template>
 
-        <el-divider>卖家风险画像</el-divider>
-        <div class="risk num" v-if="d.seller_risk">
-          <span>30 天红标 <b :class="{ bad: d.seller_risk.risk_warn }">{{ d.seller_risk.red_flags_30d }}</b> 次</span>
-          <span>累计驳回 {{ d.seller_risk.rejected_total }}</span>
-          <span>历史提交 {{ d.seller_risk.products_total }}</span>
-          <el-tag v-if="d.seller_risk.risk_warn" type="danger" size="small">账号预警</el-tag>
-        </div>
+        <!-- 操作区（快捷键 A 通过 / R 驳回） -->
+        <template v-if="d.status === 1">
+          <el-divider>审核操作</el-divider>
+          <div class="act">
+            <div class="act-row">
+              <span class="dim">认定等级</span>
+              <el-select v-model="grade" style="width: 130px" placeholder="认定等级" ref="gradeSelect">
+                <el-option v-for="g in ['特优','特级','甲级','乙级','等外']" :key="g" :label="g" :value="g" />
+              </el-select>
+              <span class="kbd-hint dim">AI 有建议时默认带入</span>
+            </div>
+            <div class="act-btns">
+              <el-button type="danger" plain @click="rejectDialog = true">驳回（R）</el-button>
+              <el-button type="primary" @click="onApprove">通过上架（A）</el-button>
+            </div>
+            <div class="kbd-hint dim">快捷键：A 通过 · R 驳回 · E 改级 · → 返回队列</div>
+          </div>
+        </template>
+        <el-tag v-else :type="{ 3: 'success', 4: 'danger', 5: 'info' }[d.status]" size="large" class="done-tag">
+          {{ { 3: '已上架', 4: '已驳回', 5: '已下架' }[d.status] || `状态${d.status}` }}
+        </el-tag>
       </div>
     </div>
 
-    <!-- 审核记录 -->
-    <div class="card block logs">
-      <div class="sec-head"><b>审核记录（不可删除）</b></div>
-      <el-timeline v-if="d.audit_logs?.length">
-        <el-timeline-item v-for="lg in d.audit_logs" :key="lg.id" :timestamp="lg.acted_at?.replace('T', ' ')"
-                          :type="{ approve: 'success', grade: 'primary', reject: 'danger' }[lg.action]">
-          <b>{{ { approve: '通过', grade: '改级上架', reject: '驳回' }[lg.action] }}</b>
-          · 自述 <GradeTag :grade="lg.grade_claim || '—'" /> / AI
-          <GradeTag :grade="lg.ai_grade || '灰'" /> → 认定 <GradeTag :grade="lg.grade_platform_after || '—'" />
-          <DiffFlag v-if="lg.diff_flag" :flag="lg.diff_flag" />
-          <div class="dim">{{ lg.reason }}</div>
-        </el-timeline-item>
-      </el-timeline>
-      <el-empty v-else :image-size="60" description="暂无审核记录" />
-    </div>
-
-    <!-- 驳回对话框 -->
-    <el-dialog v-model="rejectDialog" title="驳回商品" width="460px">
-      <el-form label-width="90px">
-        <el-form-item label="驳回原因" required>
-          <el-select v-model="reasonCode" placeholder="选择原因">
-            <el-option v-for="(label, code) in rejectReasons" :key="code" :label="label" :value="code" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="补充说明">
-          <el-input v-model="note" type="textarea" :rows="2" maxlength="150" show-word-limit />
-        </el-form-item>
-      </el-form>
+    <!-- 驳回对话框：原因标签点选 -->
+    <el-dialog v-model="rejectDialog" title="驳回商品" width="500px">
+      <div class="reason-tags">
+        <span v-for="(label, code) in rejectReasons" :key="code" class="r-tag"
+              :class="{ on: reasonCode === code }" @click="reasonCode = code">{{ label }}</span>
+      </div>
+      <el-input v-model="note" type="textarea" :rows="2" maxlength="150" show-word-limit
+                placeholder="补充说明（可选）" class="note-input" />
       <template #footer>
         <el-button @click="rejectDialog = false">取消</el-button>
         <el-button type="danger" @click="onReject">确认驳回</el-button>
@@ -116,7 +135,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { auditApprove, auditDetail, auditReject, auditReassess } from '../../api'
@@ -170,30 +189,59 @@ onMounted(async () => {
   const q = await auditQueue({ size: 1 })
   rejectReasons.value = q.reject_reasons || {}
   await load()
+  // 快捷键：A 通过 / R 驳回 / E 聚焦改级 / → 返回队列
+  window.addEventListener('keydown', onKey)
 })
+
+onUnmounted(() => window.removeEventListener('keydown', onKey))
+
+function onKey(e) {
+  const tag = e.target?.tagName
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return
+  if (d.value.status !== 1) return
+  if (e.key === 'a' || e.key === 'A') onApprove()
+  else if (e.key === 'r' || e.key === 'R') rejectDialog.value = true
+  else if (e.key === 'e' || e.key === 'E') document.activeElement?.blur()
+  else if (e.key === 'ArrowRight') router.push('/admin/audit')
+}
 </script>
 
 <style scoped>
 .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .top-ops { display: flex; gap: 10px; }
-.grid { display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 14px; align-items: start; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) 400px; gap: 14px; align-items: start; }
 .block { padding: 18px 20px; margin-bottom: 14px; }
 .block h3 { margin: 0 0 6px; }
 .meta { font-size: 12.5px; }
 .desc { font-size: 13px; color: var(--ink-2); margin: 10px 0; line-height: 1.7; }
-.imgs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-.img { height: 96px; border-radius: 8px; background: #f3ebe4 center/cover no-repeat; position: relative; }
-.img .el-tag { position: absolute; left: 4px; top: 4px; }
+.imgs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.img { height: 150px; border-radius: 8px; background: #f3ebe4; cursor: zoom-in; }
+.img-err { height: 100%; display: flex; align-items: center; justify-content: center; color: var(--ink-4); font-size: 12px; }
+.l1-note { font-size: 11px; margin-top: 10px; }
 .sec-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .berry { width: 16px; height: 16px; border-radius: 46% 54% 50% 50% / 58% 58% 42% 42%;
   background: radial-gradient(ellipse at 32% 28%, #ee7a5f 0%, #c22f27 52%, #8e1d18 100%); }
 .grades { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 12px; flex-wrap: wrap; }
-.a-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.a-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
 .a-grid > div { background: var(--brand-soft); border-radius: 8px; padding: 8px 10px; text-align: center; }
 .a-grid b { display: block; font-size: 16px; color: var(--brand); }
 .a-grid span { font-size: 11px; color: var(--ink-3); }
 .model-line { font-size: 11px; margin-top: 6px; }
-.risk { display: flex; gap: 18px; font-size: 13px; align-items: center; }
-.risk b.bad { color: var(--brand); }
-.logs { max-width: 100%; }
+.assess-col { position: sticky; top: 12px; }
+.risk { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.risk-row { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--line); padding-bottom: 6px; }
+.risk-row span { color: var(--ink-3); }
+.risk-row b.bad { color: var(--brand); }
+.mini-logs :deep(.el-timeline-item__content) { font-size: 12.5px; }
+.act { display: flex; flex-direction: column; gap: 10px; }
+.act-row { display: flex; align-items: center; gap: 10px; }
+.act-btns { display: flex; gap: 10px; }
+.kbd-hint { font-size: 11px; }
+.done-tag { margin-top: 12px; }
+.reason-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.r-tag { font-size: 12.5px; padding: 5px 12px; border: 1px solid var(--line); border-radius: 999px;
+  cursor: pointer; color: var(--ink-2); transition: all .15s; }
+.r-tag:hover { border-color: var(--brand); color: var(--brand); }
+.r-tag.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.note-input { margin-bottom: 4px; }
 </style>

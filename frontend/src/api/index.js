@@ -1,3 +1,8 @@
+import axios from 'axios'
+
+// 供需要直接调原始接口的页面使用（如 kb/search 测试）
+export { default as http } from './http'
+
 import http from './http'
 
 export const login = (username, password) =>
@@ -29,6 +34,19 @@ export const cancelOrder = (id, reason) => http.post(`/orders/${id}/cancel`, { r
 export const registerPay = (id, voucher_key) => http.post(`/orders/${id}/pay`, { voucher_key })
 
 export const auditQueue = (params) => http.get('/admin/audit/queue', { params })
+export const adminStats = () => http.get('/admin/audit/stats')
+
+// 知识库
+export const kbDocuments = (params) => http.get('/kb/documents', { params })
+export const uploadKbDoc = (file, meta) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  if (meta?.title) fd.append('title', meta.title)
+  if (meta?.doc_type) fd.append('doc_type', meta.doc_type)
+  return http.post('/kb/documents', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+}
+export const kbChunks = (docId) => http.get(`/kb/documents/${docId}/chunks`)
+export const kbEval = (params) => http.get('/kb/eval', { params })
 export const auditDetail = (id) => http.get(`/admin/audit/products/${id}`)
 export const auditApprove = (id, gradePlatform) =>
   http.post(`/admin/audit/products/${id}/approve`, null, {

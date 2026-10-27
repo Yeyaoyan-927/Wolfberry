@@ -5,6 +5,12 @@
       <span class="dim">上传实拍图 → AI 自动外观评估（异步）→ 平台审核后上架</span>
     </div>
 
+    <el-steps :active="created ? 2 : 0" align-center class="steps">
+      <el-step title="基本信息" description="品种 / 产区 / 等级自述" />
+      <el-step title="交易信息" description="价格 / 库存 / 起订量" />
+      <el-step title="实拍图与评估" description="上传 → AI 评估 → 提交审核" />
+    </el-steps>
+
     <div class="grid">
       <!-- 表单 -->
       <div class="card form-card">
@@ -54,8 +60,31 @@
 
       <!-- 图片上传与评估结果 -->
       <div class="card up-card">
+        <!-- 实时预览：买家将看到 -->
+        <div class="preview">
+          <div class="pv-head dim">买家将看到</div>
+          <div class="pv-card">
+            <div class="pv-img" :style="images[0] ? { backgroundImage: `url(${images[0].url})` } : {}">
+              <span v-if="!images.length" class="pv-ph">实拍图</span>
+            </div>
+            <div class="pv-body">
+              <div class="pv-title">{{ form.title || '（商品标题）' }}</div>
+              <div class="pv-meta">
+                <span class="gtag" :class="`grade-${form.grade_claim}`">{{ form.grade_claim }}</span>
+                <span class="dim">{{ form.origin || '产区' }} · {{ form.variety }}</span>
+              </div>
+              <div class="pv-price num">¥{{ form.unit_price || '—' }} <i>/kg</i></div>
+            </div>
+          </div>
+          <el-alert v-if="form.grade_claim === '特优' || form.grade_claim === '特级'" type="warning"
+                    :closable="false" show-icon class="pv-warn"
+                    :title="`自述「${form.grade_claim}」将接受 AI 比对：高报 1 级标黄、≥2 级标红`" />
+        </div>
+
+        <el-divider />
+
         <template v-if="!created">
-          <el-empty description="先创建商品，再上传实拍图（3~8 张，短边≥800px）" :image-size="80" />
+          <el-empty description="完成左侧信息创建商品后，在此上传实拍图（3~8 张，短边≥800px）" :image-size="70" />
         </template>
         <template v-else>
           <div class="up-head">
@@ -176,14 +205,30 @@ onMounted(() => clearTimeout(pollTimer))
 </script>
 
 <style scoped>
-.head { margin-bottom: 14px; display: flex; align-items: baseline; gap: 14px; }
+.head { margin-bottom: 10px; display: flex; align-items: baseline; gap: 14px; }
 .head h2 { margin: 0; font-size: 18px; }
 .dim { font-size: 12.5px; color: var(--ink-3); }
+.steps { margin-bottom: 18px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 10px 10px; }
 .grid { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 16px; align-items: start; }
 .form-card { padding: 20px 22px 8px; }
 .hint { font-size: 11.5px; color: var(--ink-4); margin-top: 4px; }
 .hint2 { margin-left: 8px; color: var(--ink-3); font-size: 12.5px; }
 .up-card { padding: 18px 20px; min-height: 300px; }
+.preview { margin-bottom: 4px; }
+.pv-head { font-weight: 600; margin-bottom: 8px; }
+.pv-card { display: flex; gap: 12px; border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: #fffaf8; }
+.pv-img { width: 84px; height: 84px; border-radius: 8px; background: #f3ebe4 center/cover no-repeat; flex: none;
+  display: flex; align-items: center; justify-content: center; }
+.pv-ph { font-size: 11px; color: var(--ink-4); }
+.pv-body { min-width: 0; }
+.pv-title { font-size: 13px; font-weight: 600; line-height: 1.4; height: 36px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pv-meta { display: flex; gap: 8px; align-items: center; margin: 6px 0; }
+.gtag { display: inline-block; padding: 1px 8px; font-size: 12px; line-height: 18px;
+  border: 1px solid transparent; border-radius: 4px; font-weight: 600; }
+.pv-price { color: var(--brand); font-weight: 700; font-size: 17px; }
+.pv-price i { font-style: normal; font-size: 11px; color: var(--ink-4); font-weight: 400; }
+.pv-warn { margin-top: 10px; }
 .up-head { margin-bottom: 12px; }
 .up-icon { color: var(--brand); }
 .imgs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }

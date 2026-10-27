@@ -12,6 +12,15 @@ from app.services import audit_service
 router = APIRouter(prefix="/admin/audit", tags=["admin-audit"])
 
 
+@router.get("/stats")
+def admin_stats(session: DbSession, auditor: AdminUser):
+    """仪表盘统计：商品/订单/用户/评估/知识库聚合。"""
+    from app.services import stats_service
+
+    trace = new_trace_id()
+    return ok(jsonable_encoder(stats_service.admin_stats(session)), trace_id=trace)
+
+
 @router.get("/queue")
 def audit_queue(
     session: DbSession,

@@ -28,13 +28,38 @@
         </div>
         <div class="foot-note">AI 回答仅供参考，不构成交易依据；等级判定与价格以平台规则与人工审核为准</div>
       </div>
+
+      <!-- 右：引用来源 + Agent 轨迹 -->
+      <div class="ref">
+        <div class="r-sec">
+          <div class="r-head">引用来源</div>
+          <div v-if="last?.citations?.length" class="r-cites">
+            <div v-for="c in last.citations" :key="c.no" class="r-cite">
+              <div class="r-cite-t">[{{ c.no }}] {{ c.title }}</div>
+              <div class="r-cite-x">{{ (c.text || '').slice(0, 90) }}…</div>
+            </div>
+          </div>
+          <div v-else class="dim r-empty">提问后，引用的标准条款将显示在这里</div>
+        </div>
+        <div class="r-sec" v-if="last?.steps?.length">
+          <div class="r-head">Agent 轨迹</div>
+          <div class="r-steps">
+            <div v-for="(s, i) in last.steps" :key="i" class="r-step">
+              <span class="r-dot"></span>{{ s }}
+            </div>
+          </div>
+          <div class="r-meta dim" v-if="last.intent">
+            意图 {{ last.intent }} · 工具 {{ (last.tools_used || []).join('、') || '无' }}
+            <template v-if="last.elapsed_ms"> · {{ last.elapsed_ms }}ms</template>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { nextTick, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { computed, nextTick, ref } from 'vue'
 import { kbAsk } from '../../api'
 
 const samples = [
@@ -49,6 +74,8 @@ const msgs = ref([
 const text = ref('')
 const pending = ref(false)
 const msgsEl = ref(null)
+// 右栏展示最近一条 AI 回答的引用与 Agent 轨迹
+const last = computed(() => [...msgs.value].reverse().find((m) => m.role === 'ai' && (m.citations?.length || m.steps?.length)) || {})
 
 function esc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -82,7 +109,15 @@ async function send() {
   scrollBottom()
   try {
     const data = await kbAsk(q)
-    msgs.value.push({ role: 'ai', html: render(data.answer || '（无回答）'), citations: data.citations || [] })
+    msgs.value.push({
+      role: 'ai',
+      html: render(data.answer || '（无回答）'),
+      citations: data.citations || [],
+      steps: data.steps || [],
+      intent: data.intent,
+      tools_used: data.tools_used || [],
+      elapsed_ms: data.elapsed_ms,
+    })
   } catch {
     msgs.value.push({ role: 'ai', html: '抱歉，问答服务暂时不可用，请稍后重试。' })
   } finally {
@@ -94,8 +129,8 @@ async function send() {
 
 <style scoped>
 .chat-page { display: flex; justify-content: center; }
-.chat { width: min(1180px, 100%); height: min(680px, calc(100vh - 150px)); margin: 20px auto;
-  display: grid; grid-template-columns: 250px minmax(0, 1fr); overflow: hidden; }
+.chat { width: min(1280px, 100%); height: min(680px, calc(100vh - 150px)); margin: 20px auto;
+  display: grid; grid-template-columns: 230px minmax(0, 1fr) 290px; overflow: hidden; }
 .side { border-right: 1px solid var(--line); padding: 18px 16px; background: linear-gradient(180deg, #fff, var(--brand-soft)); }
 .s-head { font-weight: 800; font-size: 16px; }
 .s-sub { font-size: 11.5px; color: var(--ink-3); margin: 6px 0 16px; }
@@ -118,4 +153,17 @@ async function send() {
 @keyframes blink { 50% { opacity: .2; } }
 .input { display: flex; gap: 10px; padding: 12px 18px; background: #fff; border-top: 1px solid var(--line); }
 .foot-note { text-align: center; font-size: 11px; color: var(--ink-4); padding: 6px 0 10px; background: #fff; }
+.ref { border-left: 1px solid var(--line); background: #fff; overflow-y: auto; padding: 16px 14px; }
+.r-sec { margin-bottom: 18px; }
+.r-head { font-weight: 700; font-size: 13px; margin-bottom: 10px; padding-left: 9px; position: relative; }
+.r-head::before { content: ""; position: absolute; left: 0; top: .3em; width: 6px; height: 6px;
+  border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%; background: var(--brand); }
+.r-cite { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+.r-cite-t { font-size: 12px; font-weight: 600; color: var(--brand); margin-bottom: 4px; }
+.r-cite-x { font-size: 11.5px; color: var(--ink-3); line-height: 1.6; }
+.r-empty { font-size: 12px; line-height: 1.7; }
+.r-steps { display: flex; flex-direction: column; gap: 6px; }
+.r-step { font-size: 11.5px; color: var(--ink-2); display: flex; align-items: baseline; gap: 6px; line-height: 1.5; }
+.r-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--brand); flex: none; transform: translateY(-2px); }
+.r-meta { font-size: 11px; margin-top: 8px; }
 </style>

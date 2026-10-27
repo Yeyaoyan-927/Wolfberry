@@ -95,11 +95,13 @@ const STATUS_DEFS = [
 ]
 const GRADE_DEFS = ['特优', '特级', '甲级', '乙级'].map((g) => ({ key: g, label: g }))
 const ORIGIN_DEFS = ['中宁', '诺木洪', '靖远'].map((o) => ({ key: o, label: o }))
+const VARIETY_DEFS = ['宁杞5号', '宁杞7号', '大麻叶'].map((v) => ({ key: v, label: v }))
 
 const tree = computed(() => [
   { name: '状态', key: 'status', children: STATUS_DEFS },
   { name: '认定等级', key: 'grade', children: GRADE_DEFS },
   { name: '产区', key: 'origin', children: ORIGIN_DEFS },
+  { name: '品种', key: 'variety', children: VARIETY_DEFS },
 ])
 
 function isActive(group, key) {
@@ -131,6 +133,7 @@ async function load() {
     if (group === 'status' && key !== 'ALL') params.status = Number(key)
     if (group === 'grade') params.grade = key
     if (group === 'origin') params.origin = key
+    if (group === 'variety') params.variety = key
     const data = await listProducts(params)
     items.value = data.items
     total.value = data.total

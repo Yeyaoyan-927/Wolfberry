@@ -10,11 +10,17 @@
       </div>
       <el-menu :default-active="active" router class="menu" background-color="#221510"
                text-color="#c9b8a8" active-text-color="#ffffff">
+        <el-menu-item index="/admin/dashboard">
+          <el-icon><DataBoard /></el-icon>仪表盘
+        </el-menu-item>
         <el-menu-item index="/admin/audit">
           <el-icon><Stamp /></el-icon>审核工作台
         </el-menu-item>
         <el-menu-item index="/admin/products">
           <el-icon><Goods /></el-icon>商品管理
+        </el-menu-item>
+        <el-menu-item index="/admin/kb">
+          <el-icon><Collection /></el-icon>知识库
         </el-menu-item>
       </el-menu>
     </el-aside>

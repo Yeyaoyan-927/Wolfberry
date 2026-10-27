@@ -22,6 +22,15 @@
             <template v-if="o.ship_company"> · {{ o.ship_company }} {{ o.ship_no }}</template>
             <template v-if="o.cancel_reason"> · 取消原因：{{ o.cancel_reason }}</template>
           </div>
+          <!-- 状态时间线 -->
+          <div class="tl" v-if="o.status !== 5">
+            <div v-for="(node, i) in tlNodes(o)" :key="i" class="tl-node">
+              <span class="tl-dot" :class="{ on: node.done, cur: node.cur }"></span>
+              <span class="tl-line" v-if="i < 3" :class="{ on: node.done }"></span>
+              <span class="tl-label" :class="{ dim2: !node.done }">{{ node.label }}</span>
+            </div>
+          </div>
+          <div class="tl cancelled" v-else><el-tag size="small" type="info">订单已取消 · 冻结库存已归还</el-tag></div>
         </div>
         <div class="o-ops">
           <template v-if="isMySale(o)">
@@ -74,6 +83,17 @@ const isMyBuy = (o) => auth.role === 'buyer' && o.buyer_id === auth.user?.id
 const isMySale = (o) => ['seller', 'admin'].includes(auth.role) && o.seller_id === auth.user?.id
 
 const tagType = (st) => ({ 1: 'warning', 2: 'primary', 3: 'primary', 4: 'success', 5: 'info' }[st])
+
+// 时间线节点：下单 → 确认 → 发货 → 收货
+function tlNodes(o) {
+  const nodes = [
+    { label: '下单', done: true, cur: o.status === 1 },
+    { label: '确认', done: o.status >= 2, cur: o.status === 2 },
+    { label: '发货', done: o.status >= 3, cur: o.status === 3 },
+    { label: '收货', done: o.status >= 4, cur: o.status === 4 },
+  ]
+  return nodes
+}
 
 async function load() {
   loading.value = true
@@ -140,5 +160,15 @@ onMounted(load)
 .no { font-size: 12px; color: var(--ink-3); }
 .o-name { font-size: 14px; font-weight: 600; margin: 6px 0 4px; }
 .o-meta { font-size: 12.5px; }
+.tl { display: flex; align-items: center; gap: 0; margin-top: 10px; }
+.tl-node { display: flex; align-items: center; }
+.tl-dot { width: 9px; height: 9px; border-radius: 50%; background: #ddd3c9; flex: none; }
+.tl-dot.on { background: var(--brand); }
+.tl-dot.cur { box-shadow: 0 0 0 3px var(--brand-soft); }
+.tl-line { width: 44px; height: 2px; background: #ddd3c9; margin: 0 6px; }
+.tl-line.on { background: var(--brand); }
+.tl-label { font-size: 11px; margin-left: 4px; color: var(--brand); }
+.tl-label.dim2 { color: var(--ink-4); }
+.tl.cancelled { margin-top: 8px; }
 .o-ops { display: flex; gap: 8px; flex: none; }
 </style>

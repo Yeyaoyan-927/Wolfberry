@@ -22,10 +22,12 @@ const routes = [
     path: '/admin',
     component: () => import('../layouts/AdminLayout.vue'),
     children: [
-      { path: '', redirect: '/admin/audit' },
+      { path: '', redirect: '/admin/dashboard' },
+      { path: 'dashboard', name: 'admin-dashboard', component: () => import('../views/admin/Dashboard.vue'), meta: { admin: true } },
       { path: 'audit', name: 'admin-audit', component: () => import('../views/admin/AuditQueue.vue'), meta: { admin: true } },
       { path: 'audit/:id', name: 'admin-audit-detail', component: () => import('../views/admin/AuditDetail.vue'), meta: { admin: true } },
       { path: 'products', name: 'admin-products', component: () => import('../views/admin/Products.vue'), meta: { admin: true } },
+      { path: 'kb', name: 'admin-kb', component: () => import('../views/admin/KbManage.vue'), meta: { admin: true } },
     ],
   },
   { path: '/:pathMatch(.*)*', redirect: '/' },
