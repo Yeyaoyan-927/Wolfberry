@@ -12,6 +12,7 @@ export const useAuthStore = defineStore('auth', {
     isLogin: (s) => !!s.token,
     role: (s) => s.user?.role || '',
     displayName: (s) => s.user?.name || s.user?.username || '',
+    sellerStatus: (s) => s.user?.seller_status ?? 0,
   },
   actions: {
     setAuth(token, user) {

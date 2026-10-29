@@ -5,6 +5,25 @@ export { default as http } from './http'
 
 import http from './http'
 
+// 注册
+export const register = (payload) => http.post('/auth/register', payload)
+export const me = () => http.get('/auth/me')
+
+// 卖家资质
+export const submitQualification = (payload) => http.post('/seller/qualification', payload)
+export const myQualification = () => http.get('/seller/qualification')
+export const adminQualifications = (params) => http.get('/admin/seller-qualifications', { params })
+export const auditQualification = (id, payload) => http.post(`/admin/seller-qualifications/${id}/audit`, payload)
+export const qualificationStats = () => http.get('/admin/seller-qualifications/stats')
+
+// 商品评价
+export const createReview = (orderId, payload) => http.post(`/orders/${orderId}/review`, payload)
+export const productReviews = (productId, params) => http.get(`/products/${productId}/reviews`, { params })
+export const pendingReviews = () => http.get('/reviews/pending')
+export const myReviews = (params) => http.get('/reviews/mine', { params })
+export const sellerReviews = (params) => http.get('/seller/reviews', { params })
+export const replyReview = (id, content) => http.post(`/seller/reviews/${id}/reply`, null, { params: { content } })
+
 export const login = (username, password) =>
   http.post('/auth/login', { username, password })
 

@@ -57,6 +57,10 @@ class Product(Base, TimestampMixin):
     cover_key: Mapped[str] = mapped_column(String(255), default="", nullable=False)
     cover_url: Mapped[str] = mapped_column(String(800), default="", nullable=False)
 
+    # 评价冗余：列表/详情直接读，避免每次聚合
+    rating_avg: Mapped[float] = mapped_column(Numeric(3, 2), default=0, nullable=False)
+    review_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
     published_at: Mapped[dt.datetime | None] = mapped_column(DateTime, nullable=True)
 
 

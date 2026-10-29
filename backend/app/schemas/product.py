@@ -61,6 +61,8 @@ class ProductOut(BaseModel):
     status: int
     description: str
     ai_grade: str | None
+    rating_avg: float = 0
+    review_count: int = 0
     reject_reason: str = ""
     ai_confidence: float | None
     defect_ratio: float | None

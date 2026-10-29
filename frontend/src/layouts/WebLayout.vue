@@ -14,8 +14,12 @@
           <el-menu-item index="/chat">智能问答</el-menu-item>
           <el-menu-item v-if="auth.isLogin" index="/orders">我的订单</el-menu-item>
           <el-menu-item v-if="auth.isLogin" index="/after-sales">售后服务</el-menu-item>
-          <el-menu-item v-if="['seller','admin'].includes(auth.role)" index="/my-products">我的商品</el-menu-item>
-          <el-menu-item v-if="['seller','admin'].includes(auth.role)" index="/publish">发布货源</el-menu-item>
+          <el-menu-item v-if="auth.role === 'seller'" index="/my-products">我的商品</el-menu-item>
+          <el-menu-item v-if="auth.role === 'seller'" index="/publish">发布货源</el-menu-item>
+          <el-menu-item v-if="auth.role === 'seller'" index="/seller/qualification">
+            资质认证
+            <span v-if="auth.sellerStatus !== 2" class="dot-warn"></span>
+          </el-menu-item>
         </el-menu>
         <div class="right">
           <template v-if="auth.isLogin">
@@ -73,6 +77,8 @@ function onLogout() {
 .right { display: flex; align-items: center; gap: 10px; }
 .admin-entry { cursor: pointer; }
 .who { font-size: 13px; color: var(--ink-2); }
+.dot-warn { display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--brand); margin-left: 4px; vertical-align: super; }
 .who.link { cursor: pointer; }
 .who.link:hover { color: var(--brand); }
 .main { padding: 0; }

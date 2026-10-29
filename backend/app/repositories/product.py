@@ -73,6 +73,9 @@ class ProductRepo(BaseRepo[Product]):
             "price_asc": [Product.unit_price.asc()],
             "price_desc": [Product.unit_price.desc()],
             "defect_asc": [Product.defect_ratio.is_(None), Product.defect_ratio.asc()],
+            # 按评分：无评价的排在后面（NULL 先排序），再看评价数
+            "rating_desc": [Product.review_count == 0, Product.rating_avg.desc(),
+                            Product.review_count.desc()],
         }
         order_clauses = order_map.get(order_by, [Product.id.desc()])
 

@@ -17,6 +17,7 @@ from app.models.product import (
     Product,
     ProductImage,
 )
+from app.models.sys import ROLE_SELLER, SQ_LABELS, SQ_VERIFIED, SysUser
 from app.repositories.product import ProductRepo
 from app.schemas.product import ImageOut, ProductCreateIn, ProductOut
 from app.services import upload_service
@@ -27,7 +28,20 @@ def _new_product_no() -> str:
     return f"GQ{dt.date.today():%Y%m%d}{token}"
 
 
-def create_product(session: Session, *, seller_id: int, payload: ProductCreateIn) -> Product:
+def create_product(session: Session, *, seller: SysUser, payload: ProductCreateIn) -> Product:
+    """发布商品：卖家必须已完成资质认证。
+
+    为什么卡在这里而不是注册时：注册只是开账号，资质是平台对"谁能供货"的审核，
+    未认证卖家可以先浏览、可以提交资质，但不能把商品送进审核队列。
+    """
+    if seller.role != ROLE_SELLER:
+        raise BizError(Err.FORBIDDEN, "仅卖家可发布商品")
+    if seller.seller_status != SQ_VERIFIED:
+        raise BizError(
+            Err.FORBIDDEN,
+            f"请先完成卖家资质认证（当前：{SQ_LABELS.get(seller.seller_status, '未认证')}）",
+        )
+
     repo = ProductRepo(session)
 
     product_no = _new_product_no()
@@ -40,7 +54,7 @@ def create_product(session: Session, *, seller_id: int, payload: ProductCreateIn
 
     product = Product(
         product_no=product_no,
-        seller_id=seller_id,
+        seller_id=seller.id,
         title=payload.title,
         variety=payload.variety,
         origin=payload.origin,

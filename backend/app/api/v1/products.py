@@ -20,7 +20,7 @@ router = APIRouter(tags=["products"])
 def create_product(payload: ProductCreateIn, seller: SellerUser, session: DbSession):
     """发布货源。图片在创建后通过 /products/{id}/images 上传。"""
     trace = new_trace_id()
-    product = product_service.create_product(session, seller_id=seller.id, payload=payload)
+    product = product_service.create_product(session, seller=seller, payload=payload)
     return ok(jsonable_encoder(product_service.to_out(product, [])), trace_id=trace)
 
 
@@ -75,7 +75,9 @@ def list_products(
     origin: str | None = None,
     min_price: float | None = None,
     max_price: float | None = None,
-    order_by: str = Query("newest", pattern="^(newest|price_asc|price_desc|defect_asc)$"),
+    order_by: str = Query(
+        "newest", pattern="^(newest|price_asc|price_desc|defect_asc|rating_desc)$"
+    ),
     only_on_shelf: bool = Query(True, description="false 仅管理员可用"),
 ):
     trace = new_trace_id()

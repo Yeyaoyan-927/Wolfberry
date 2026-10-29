@@ -23,6 +23,9 @@ from app.infra.db import engine  # noqa: E402
 COLUMNS: list[tuple[str, str, str]] = [
     ("kb_document", "chunk_size", "INT NOT NULL DEFAULT 500"),
     ("kb_document", "chunk_overlap", "INT NOT NULL DEFAULT 80"),
+    ("sys_user", "seller_status", "INT NOT NULL DEFAULT 0"),
+    ("product", "rating_avg", "DECIMAL(3,2) NOT NULL DEFAULT 0"),
+    ("product", "review_count", "INT NOT NULL DEFAULT 0"),
 ]
 
 
@@ -44,6 +47,14 @@ def main() -> None:
             conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"))
             print(f"  新增 {table}.{column} {ddl}")
             added += 1
+
+    # 存量卖家视为已认证（历史数据无资质记录，不应因新规则失去发布能力）
+    with engine.begin() as conn:
+        n = conn.execute(
+            text("UPDATE sys_user SET seller_status = 2 WHERE role = 'seller' AND seller_status = 0")
+        ).rowcount
+        if n:
+            print(f"  存量卖家标记为已认证：{n} 个")
 
     print(f"\n迁移完成，新增 {added} 列")
 

@@ -31,6 +31,8 @@
             <el-radio-button value="price_asc">价格↑</el-radio-button>
             <el-radio-button value="price_desc">价格↓</el-radio-button>
             <el-radio-button value="defect_asc">缺陷率↑</el-radio-button>
+            <el-radio-button value="rating_desc">评分优先</el-radio-button>
+            <el-radio-button value="rating_desc">评分优先</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item>
@@ -56,6 +58,16 @@
               <span v-if="p.grain_count"> · 粒数 {{ p.grain_count }}</span>
             </div>
             <div class="ai dim2" v-else>AI 评估中 / 未评估</div>
+            <div class="rate" v-if="p.review_count">
+              <el-rate :model-value="Math.round(p.rating_avg)" disabled size="small" />
+              <span class="dim num">{{ p.rating_avg }}（{{ p.review_count }}）</span>
+            </div>
+            <div class="rate dim2" v-else><span class="dim">暂无评价</span></div>
+            <div class="rate" v-if="p.review_count">
+              <el-rate :model-value="Math.round(p.rating_avg)" disabled size="small" />
+              <span class="dim num">{{ p.rating_avg }}（{{ p.review_count }}）</span>
+            </div>
+            <div class="rate dim2" v-else><span class="dim">暂无评价</span></div>
             <div class="pfoot">
               <span class="price num">¥{{ p.unit_price }}</span><span class="per">/kg</span>
               <span class="stock dim">库存 {{ p.stock }}kg</span>
@@ -132,6 +144,10 @@ onMounted(load)
 .ai { font-size: 12px; color: var(--ink-2); margin-bottom: 6px; }
 .ai b { color: var(--brand); }
 .pfoot { display: flex; align-items: baseline; gap: 3px; }
+.rate { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; min-height: 18px; }
+.rate :deep(.el-rate) { height: 18px; }
+.rate { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; min-height: 18px; }
+.rate :deep(.el-rate) { height: 18px; }
 .price { color: var(--brand); font-size: 19px; font-weight: 700; }
 .per { font-size: 12px; color: var(--ink-4); }
 .stock { margin-left: auto; }

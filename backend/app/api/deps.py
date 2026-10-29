@@ -48,7 +48,9 @@ def require_role(*roles: str):
     return dependency
 
 
-SellerUser = Annotated[SysUser, Depends(require_role("seller", "admin"))]
+# 卖家专属：管理员不参与买卖（后台有独立的代操作接口），
+# 否则会出现「管理员账号发布商品、出现在审核队列里」的荒谬路径
+SellerUser = Annotated[SysUser, Depends(require_role("seller"))]
 AdminUser = Annotated[SysUser, Depends(require_role("admin"))]
 AnyUser = Annotated[SysUser, Depends(get_current_user)]
 

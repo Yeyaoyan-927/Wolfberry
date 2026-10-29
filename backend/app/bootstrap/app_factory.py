@@ -89,13 +89,17 @@ def _register_exception_handlers(app: FastAPI) -> None:
 def _register_routers(app: FastAPI) -> None:
     from app.api import files
     from app.api.v1 import uploads
-    from app.api.v1 import admin_console, after_sales, audit, auth, kb, market, orders, products, skills, system
+    from app.api.v1 import (
+        admin_console, after_sales, audit, auth, kb, market, orders, products,
+        qualifications, reviews, skills, system,
+    )
 
     app.include_router(files.router)
     app.include_router(uploads.router, prefix=settings.API_PREFIX)
 
     api = APIRouter(prefix=settings.API_PREFIX)
     for item in (auth.router, products.router, orders.router, after_sales.router,
+                 reviews.router, qualifications.router,
                  audit.router, admin_console.router, market.router,
                  kb.router, skills.router, system.router):
         api.include_router(item)

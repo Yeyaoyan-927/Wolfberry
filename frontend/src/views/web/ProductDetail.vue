@@ -30,6 +30,13 @@
           <DiffFlag :flag="flag" :gap="p.grade_diff" />
         </div>
 
+        <div class="rate-row" v-if="p.review_count">
+          <el-rate :model-value="Math.round(p.rating_avg)" disabled size="small" />
+          <b class="num">{{ p.rating_avg }}</b>
+          <span class="dim">{{ p.review_count }} 条评价</span>
+          <el-button link type="primary" size="small" @click="scrollToReviews">查看评价</el-button>
+        </div>
+
         <div class="price-row">
           <span class="price num">¥{{ p.unit_price }}</span><span class="per">/kg</span>
           <span class="stock dim">库存 {{ p.stock }}kg · 起订 {{ p.min_order_qty }}kg</span>
@@ -42,13 +49,15 @@
           <el-descriptions-item label="状态">{{ statusLabel }}</el-descriptions-item>
         </el-descriptions>
 
-        <div class="buy">
+        <div class="buy" v-if="isBuyer">
           <el-input-number v-model="qty" :min="Number(p.min_order_qty)" :max="Number(p.stock)" :step="10" />
           <span class="dim">kg</span>
           <el-button type="primary" size="large" :disabled="p.status !== 3" @click="onBuy">
             立即下单 · 合计 ¥{{ (qty * Number(p.unit_price)).toFixed(2) }}
           </el-button>
         </div>
+        <el-alert v-else type="info" :closable="false" class="role-note"
+                  :title="roleNote" />
 
         <el-divider />
         <div class="desc">
@@ -82,6 +91,8 @@
       </div>
     </div>
 
+    <ReviewSection v-if="p.id" :product-id="p.id" ref="revEl" />
+
     <!-- 下单对话框 -->
     <el-dialog v-model="buyDialog" title="确认订单" width="440px">
       <el-descriptions :column="1" border>
@@ -109,11 +120,19 @@ import { createOrder, getProduct } from '../../api'
 import { useAuthStore } from '../../stores/auth'
 import GradeTag from '../../components/GradeTag.vue'
 import DiffFlag from '../../components/DiffFlag.vue'
+import ReviewSection from './ReviewSection.vue'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const isBuyer = computed(() => auth.role === 'buyer')
+const roleNote = computed(() => {
+  if (auth.role === 'seller') return '卖家账号仅可浏览货源，下单请使用买家账号'
+  if (auth.role === 'admin') return '管理员仅做平台治理，不参与交易'
+  return ''
+})
 const p = ref({})
+const revEl = ref(null)
 const cur = ref(0)
 const qty = ref(50)
 const loading = ref(true)
@@ -130,6 +149,10 @@ const flag = computed(() => {
   if (p.value.grade_diff < 0) return '蓝'
   return '绿'
 })
+
+function scrollToReviews() {
+  revEl.value?.$el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
 function onBuy() {
   if (!auth.isLogin) return router.push({ name: 'login', query: { redirect: route.fullPath } })
@@ -180,6 +203,9 @@ onMounted(async () => {
   padding: 9px 11px; font-size: 11.5px; line-height: 1.7; color: var(--ink-3); }
 .a-note b { display: block; color: var(--ink-2); font-size: 12px; margin-bottom: 2px; }
 .dim { font-size: 12px; color: var(--ink-3); }
+.rate-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.rate-row b { color: var(--brand); font-size: 15px; }
+.role-note { margin-top: 4px; }
 .price-row { display: flex; align-items: baseline; gap: 6px; background: var(--brand-soft);
   border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
 .price { color: var(--brand); font-size: 28px; font-weight: 800; }

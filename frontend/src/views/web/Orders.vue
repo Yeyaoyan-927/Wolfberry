@@ -1,12 +1,19 @@
 <template>
   <div class="page">
     <div class="head">
-      <h2>我的订单</h2>
+      <h2>{{ isBuyer ? '我的订单' : '我收到的订单' }}</h2>
       <el-radio-group v-model="status" @change="load">
         <el-radio-button :value="undefined">全部</el-radio-button>
         <el-radio-button v-for="(label, st) in STATUS" :key="st" :value="Number(st)">{{ label }}</el-radio-button>
       </el-radio-group>
     </div>
+
+    <el-alert v-if="isBuyer && pendingCount" type="warning" :closable="false" class="pending-tip"
+              :title="`你有 ${pendingCount} 笔已完成订单还没评价，评价会帮助其他买家判断`">
+      <template #default>
+        <el-button size="small" type="primary" plain @click="openFirstPending">去评价</el-button>
+      </template>
+    </el-alert>
 
     <div class="card list" v-loading="loading">
       <div v-for="o in items" :key="o.id" class="orow">
@@ -42,6 +49,7 @@
             <el-button size="small" plain v-if="o.status === 1 && o.pay_status === 0" @click="doPay(o)">登记支付</el-button>
             <el-button size="small" plain type="danger" v-if="[1, 2].includes(o.status)" @click="doCancel(o)">取消</el-button>
             <el-button size="small" plain type="warning" v-if="o.status === 4 && isBuyer" @click="openAfterSale(o)">申请售后</el-button>
+            <el-button size="small" type="primary" plain v-if="o.status === 4 && isBuyer" @click="openReview(o)">评价</el-button>
           </template>
         </div>
       </div>
@@ -49,6 +57,8 @@
     </div>
 
     <!-- 发货对话框 -->
+    <ReviewDialog v-model="revDialog" :order="revOrder" @done="onReviewed" />
+
     <!-- 申请售后 -->
     <el-dialog v-model="asDialog" title="申请售后" width="520px">
       <el-alert type="info" :closable="false" class="as-tip"
@@ -112,11 +122,17 @@ import {
   registerPay, shipOrder, uploadImage,
 } from '../../api'
 import { useAuthStore } from '../../stores/auth'
+import { pendingReviews } from '../../api'
+import ReviewDialog from './ReviewDialog.vue'
 
 const STATUS = { 1: '待确认', 2: '待发货', 3: '已发货', 4: '已完成', 5: '已取消' }
 const auth = useAuthStore()
 const router = useRouter()
 const isBuyer = computed(() => auth.role === 'buyer')
+const revDialog = ref(false)
+const revOrder = ref(null)
+const pendingCount = ref(0)
+const pendingList = ref([])
 const asDialog = ref(false)
 const asOrder = ref(null)
 const asSubmitting = ref(false)
@@ -218,7 +234,38 @@ async function submitAfterSale() {
   }
 }
 
-onMounted(load)
+async function loadPending() {
+  if (!isBuyer.value) return
+  try {
+    pendingList.value = await pendingReviews()
+    pendingCount.value = (pendingList.value || []).filter((p) => !p.has_open_after_sale).length
+  } catch {
+    pendingCount.value = 0
+  }
+}
+
+function openReview(o) {
+  revOrder.value = {
+    order_id: o.id, order_no: o.order_no, product_title: o.product_title,
+    product_id: o.product_id, total_amount: o.total_amount,
+  }
+  revDialog.value = true
+}
+
+function openFirstPending() {
+  const p = pendingList.value.find((x) => !x.has_open_after_sale)
+  if (p) {
+    revOrder.value = p
+    revDialog.value = true
+  }
+}
+
+function onReviewed() {
+  load()
+  loadPending()
+}
+
+onMounted(() => { load(); loadPending() })
 </script>
 
 <style scoped>
@@ -232,6 +279,8 @@ onMounted(load)
 .no { font-size: 12px; color: var(--ink-3); }
 .o-name { font-size: 14px; font-weight: 600; margin: 6px 0 4px; }
 .o-meta { font-size: 12.5px; }
+.pending-tip { margin-bottom: 12px; }
+.pending-tip :deep(.el-alert__content) { display: flex; align-items: center; gap: 12px; }
 .tl { display: flex; align-items: center; gap: 0; margin-top: 10px; }
 .tl-node { display: flex; align-items: center; }
 .tl-dot { width: 9px; height: 9px; border-radius: 50%; background: #ddd3c9; flex: none; }

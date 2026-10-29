@@ -19,6 +19,7 @@ const routes = [
       { path: '/my-products', name: 'my-products', component: () => import('../views/web/MyProducts.vue'), meta: { seller: true } },
       { path: '/profile', name: 'profile', component: () => import('../views/web/Profile.vue') },
       { path: '/after-sales', name: 'after-sales', component: () => import('../views/web/AfterSales.vue') },
+      { path: '/seller/qualification', name: 'seller-qualification', component: () => import('../views/web/SellerQualification.vue'), meta: { seller: true } },
     ],
   },
   // ---------- 后台（每个子路由显式声明 admin，不依赖 meta 合并） ----------
@@ -36,6 +37,7 @@ const routes = [
       { path: 'thresholds', name: 'admin-thresholds', component: () => import('../views/admin/Thresholds.vue'), meta: { admin: true } },
       { path: 'logs', name: 'admin-logs', component: () => import('../views/admin/AuditLogs.vue'), meta: { admin: true } },
       { path: 'after-sales', name: 'admin-after-sales', component: () => import('../views/admin/AfterSalesManage.vue'), meta: { admin: true } },
+      { path: 'qualifications', name: 'admin-qualifications', component: () => import('../views/admin/Qualifications.vue'), meta: { admin: true } },
     ],
   },
   { path: '/:pathMatch(.*)*', redirect: '/' },

@@ -5,6 +5,16 @@
       <span class="dim">上传实拍图 → AI 自动外观评估（异步）→ 平台审核后上架</span>
     </div>
 
+    <el-alert v-if="auth.role === 'seller' && auth.sellerStatus !== 2" type="warning" :closable="false"
+              class="gq-tip"
+              title="尚未完成卖家资质认证，当前无法提交商品">
+      <template #default>
+        <el-button size="small" type="primary" plain @click="$router.push('/seller/qualification')">
+          去提交资质
+        </el-button>
+      </template>
+    </el-alert>
+
     <el-steps :active="created ? 2 : 0" align-center class="steps">
       <el-step title="基本信息" description="品种 / 产区 / 等级自述" />
       <el-step title="交易信息" description="价格 / 库存 / 起订量" />
@@ -126,6 +136,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useAuthStore } from '../../stores/auth'
 import { createProduct, getProduct, uploadProductImage } from '../../api'
 import { auditReassess } from '../../api'
 
@@ -136,6 +147,7 @@ const form = ref({
 })
 const created = ref(null)
 const images = ref([])
+const auth = useAuthStore()
 const submitting = ref(false)
 const assessing = ref(false)
 const assessment = ref(null)
@@ -208,6 +220,10 @@ onMounted(() => clearTimeout(pollTimer))
 .head { margin-bottom: 10px; display: flex; align-items: baseline; gap: 14px; }
 .head h2 { margin: 0; font-size: 18px; }
 .dim { font-size: 12.5px; color: var(--ink-3); }
+.gq-tip { margin-bottom: 12px; }
+.gq-tip :deep(.el-alert__content) { display: flex; align-items: center; gap: 12px; }
+.gq-tip { margin-bottom: 12px; }
+.gq-tip :deep(.el-alert__content) { display: flex; align-items: center; gap: 12px; }
 .steps { margin-bottom: 18px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 10px 10px; }
 .grid { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 16px; align-items: start; }
 .form-card { padding: 20px 22px 8px; }
